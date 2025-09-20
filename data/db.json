@@ -1,52 +1,210 @@
 {
+  "user": {
+    "id": 1,
+    "name": "Renato Leite",
+    "initials": "RL",
+    "email": "renato@budgy.com",
+    "currentBalance": 4836.00
+  },
+  "stats": {
+    "currentBalance": 4836.00,
+    "income": 3814.25,
+    "expenses": 1700.50,
+    "savings": 159.00,
+    "incomeChange": "+2.5%",
+    "expensesChange": "-1.2%",
+    "savingsChange": "+5.4%"
+  },
   "transactions": [
     {
-      "id": "1",
-      "amount": 150.5,
-      "description": "Grocery shopping",
-      "category": "Food",
+      "id": 1,
+      "name": "Emma Richardson",
+      "date": "2025-08-19",
+      "amount": -75.50,
+      "category": "restaurant",
       "type": "expense",
-      "date": "2024-01-15"
+      "icon": "Utensils",
+      "color": "bg-orange-500"
     },
     {
-      "id": "2",
-      "amount": 2500,
-      "description": "Monthly salary",
-      "category": "Salary",
+      "id": 2,
+      "name": "Savory Food",
+      "date": "2025-08-19",
+      "amount": 2000.00,
+      "category": "income",
       "type": "income",
-      "date": "2024-01-01"
+      "icon": "ShoppingBag",
+      "color": "bg-green-500"
     },
     {
-      "id": "3",
-      "amount": 75.25,
-      "description": "Gas station",
-      "category": "Transportation",
+      "id": 3,
+      "name": "Daniel Carter",
+      "date": "2025-08-18",
+      "amount": -42.30,
+      "category": "coffee",
       "type": "expense",
-      "date": "2024-01-12"
+      "icon": "Coffee",
+      "color": "bg-amber-500"
     },
     {
-      "id": "4",
-      "amount": 45,
-      "description": "Internet bill",
-      "category": "Utilities",
-      "type": "expense",
-      "date": "2024-01-10"
-    },
-    {
-      "id": "5",
-      "amount": 200,
-      "description": "Freelance work",
-      "category": "Freelance",
-      "type": "income",
-      "date": "2024-01-14"
-    },
-    {
-      "amount": 20,
-      "description": "taxi",
+      "id": 4,
+      "name": "Urban Services Hub",
+      "date": "2025-08-17",
+      "amount": -65.00,
       "category": "transport",
       "type": "expense",
-      "date": "2025-09-17",
-      "id": "8918"
+      "icon": "Car",
+      "color": "bg-blue-500"
+    },
+    {
+      "id": 5,
+      "name": "Sun Park",
+      "date": "2025-08-17",
+      "amount": 120.00,
+      "category": "refund",
+      "type": "income",
+      "icon": "Fuel",
+      "color": "bg-purple-500"
+    },
+    {
+      "id": 6,
+      "name": "Netflix Subscription",
+      "date": "2025-08-16",
+      "amount": -15.99,
+      "category": "entertainment",
+      "type": "expense",
+      "icon": "Tv",
+      "color": "bg-red-500"
+    },
+    {
+      "id": 7,
+      "name": "Grocery Store",
+      "date": "2025-08-15",
+      "amount": -89.45,
+      "category": "groceries",
+      "type": "expense",
+      "icon": "ShoppingCart",
+      "color": "bg-green-600"
+    }
+  ],
+  "budgets": [
+    {
+      "id": 1,
+      "category": "Entertainment",
+      "spent": 25,
+      "limit": 50,
+      "color": "bg-purple-500"
+    },
+    {
+      "id": 2,
+      "category": "Bills",
+      "spent": 320,
+      "limit": 400,
+      "color": "bg-gray-600"
+    },
+    {
+      "id": 3,
+      "category": "Dining Out",
+      "spent": 180,
+      "limit": 200,
+      "color": "bg-orange-500"
+    },
+    {
+      "id": 4,
+      "category": "Personal Care",
+      "spent": 100,
+      "limit": 100,
+      "color": "bg-teal-500"
+    },
+    {
+      "id": 5,
+      "category": "Groceries",
+      "spent": 250,
+      "limit": 300,
+      "color": "bg-green-500"
+    },
+    {
+      "id": 6,
+      "category": "Transport",
+      "spent": 85,
+      "limit": 120,
+      "color": "bg-blue-500"
+    }
+  ],
+  "savingsPots": [
+    {
+      "id": 1,
+      "name": "Vacation",
+      "saved": 765,
+      "goal": 2000,
+      "icon": "Plane",
+      "color": "bg-teal-500"
+    },
+    {
+      "id": 2,
+      "name": "New Laptop",
+      "saved": 320,
+      "goal": 1000,
+      "icon": "Laptop",
+      "color": "bg-blue-500"
+    },
+    {
+      "id": 3,
+      "name": "Gift",
+      "saved": 40,
+      "goal": 100,
+      "icon": "Gift",
+      "color": "bg-purple-500"
+    },
+    {
+      "id": 4,
+      "name": "Emergency Fund",
+      "saved": 850,
+      "goal": 5000,
+      "icon": "PiggyBank",
+      "color": "bg-green-500"
+    },
+    {
+      "id": 5,
+      "name": "Car Down Payment",
+      "saved": 1200,
+      "goal": 5000,
+      "icon": "Car",
+      "color": "bg-red-500"
+    }
+  ],
+  "recurringBills": [
+    {
+      "id": 1,
+      "name": "Netflix",
+      "amount": 15.99,
+      "dueDate": "2025-09-01",
+      "status": "paid",
+      "category": "entertainment"
+    },
+    {
+      "id": 2,
+      "name": "Electric Bill",
+      "amount": 89.50,
+      "dueDate": "2025-09-05",
+      "status": "pending",
+      "category": "utilities"
+    },
+    {
+      "id": 3,
+      "name": "Internet",
+      "amount": 49.99,
+      "dueDate": "2025-09-10",
+      "status": "pending",
+      "category": "utilities"
+    },
+    {
+      "id": 4,
+      "name": "Gym Membership",
+      "amount": 29.99,
+      "dueDate": "2025-09-15",
+      "status": "pending",
+      "category": "health"
     }
   ]
 }
