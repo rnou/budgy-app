@@ -6,7 +6,7 @@ export const Navbar = ({ onMenuToggle }) => {
   const { user } = useFinance();
 
   return (
-    <nav className="bg-gray-900 px-6 py-4 shadow-lg">
+    <nav className="bg-gray-900 px-6 py-2 shadow-lg">
       <div className="flex items-center justify-between">
         {/* Mobile Menu Button + Logo Section */}
         <div className="flex items-center space-x-4">
@@ -18,14 +18,9 @@ export const Navbar = ({ onMenuToggle }) => {
             <Menu size={20} />
           </button>
           
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-orange-400 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-xl">B</span>
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-teal-400 via-green-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
-              BUDGY
-            </span>
-          </div>
+          <span className="text-2xl font-bold bg-gradient-to-r from-teal-400 via-green-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
+            BUDGY
+          </span>
         </div>
 
         {/* Right Section - Notifications and Profile */}

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 
 export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
+
   const menuItems = [
     {
       icon: LayoutDashboard,
@@ -60,14 +61,10 @@ export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
           {/* Mobile Close Button */}
           {isMobile && (
             <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-orange-400 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">B</span>
-                </div>
-                <span className="text-lg font-bold bg-gradient-to-r from-teal-400 via-green-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                  BUDGY
-                </span>
-              </div>
+              <span className="text-lg font-bold bg-gradient-to-r from-teal-400 via-green-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                BUDGY
+              </span>
+
               <button 
                 onClick={onClose}
                 className="p-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-all duration-200"
