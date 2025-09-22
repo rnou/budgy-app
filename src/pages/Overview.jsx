@@ -1,13 +1,13 @@
 import React from 'react';
-import StatsCard from './StatsCard';
-import BudgetOverview from './BudgetOverview';
-import RecentTransactions from './RecentTransactions';
-import SavingsPots from './SavingsPots';
-import LoadingSpinner from './LoadingSpinner';
+import StatsCard from '../components/StatsCard';
+import BudgetOverview from '../components/BudgetOverview';
+import RecentTransactions from '../components/RecentTransactions';
+import SavingsPots from '../components/SavingsPots';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { useFinance } from '../contexts/FinanceContext';
 import { Wallet, TrendingUp, TrendingDown, PiggyBank } from 'lucide-react';
 
-const DashboardOverview = () => {
+export const Overview = () => {
   const { stats, loading, error } = useFinance();
 
   if (loading) {
@@ -32,7 +32,7 @@ const DashboardOverview = () => {
   const statsData = [
     {
       title: "Current Balance",
-      amount: `${stats.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+      amount: `$${stats.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       icon: Wallet,
       color: "blue",
       trend: null,
@@ -40,7 +40,7 @@ const DashboardOverview = () => {
     },
     {
       title: "Income",
-      amount: `${stats.income.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+      amount: `$${stats.income.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       icon: TrendingUp,
       color: "green",
       trend: "up",
@@ -48,7 +48,7 @@ const DashboardOverview = () => {
     },
     {
       title: "Expenses",
-      amount: `${stats.expenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+      amount: `$${stats.expenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       icon: TrendingDown,
       color: "red",
       trend: "down",
@@ -56,7 +56,7 @@ const DashboardOverview = () => {
     },
     {
       title: "Savings",
-      amount: `${stats.savings.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+      amount: `$${stats.savings.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       icon: PiggyBank,
       color: "purple",
       trend: "up",
@@ -108,4 +108,4 @@ const DashboardOverview = () => {
   );
 };
 
-export default DashboardOverview;
+export default Overview;

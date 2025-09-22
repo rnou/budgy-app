@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   ArrowUpDown, 
@@ -10,34 +11,48 @@ import {
 } from 'lucide-react';
 
 export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const menuItems = [
     {
       icon: LayoutDashboard,
       label: 'Overview',
-      active: true
+      path: '/',
+      active: location.pathname === '/'
     },
     {
       icon: ArrowUpDown,
       label: 'Transactions',
-      active: false
+      path: '/transactions',
+      active: location.pathname === '/transactions'
     },
     {
       icon: PiggyBank,
       label: 'Budgets',
-      active: false
+      path: '/budgets',
+      active: location.pathname === '/budgets'
     },
     {
       icon: Wallet,
       label: 'Savings Pots',
-      active: false
+      path: '/savings',
+      active: location.pathname === '/savings'
     },
     {
       icon: Calendar,
       label: 'Recurring Bills',
-      active: false
+      path: '/bills',
+      active: location.pathname === '/bills'
     }
   ];
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    if (isMobile && onClose) {
+      onClose();
+    }
+  };
 
   return (
     <>
@@ -61,10 +76,14 @@ export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
           {/* Mobile Close Button */}
           {isMobile && (
             <div className="flex justify-between items-center mb-6">
-              <span className="text-lg font-bold bg-gradient-to-r from-teal-400 via-green-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                BUDGY
-              </span>
-
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-orange-400 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">B</span>
+                </div>
+                <span className="text-lg font-bold bg-gradient-to-r from-teal-400 via-green-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                  BUDGY
+                </span>
+              </div>
               <button 
                 onClick={onClose}
                 className="p-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-all duration-200"
@@ -80,7 +99,7 @@ export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
               return (
                 <div
                   key={index}
-                  onClick={isMobile ? onClose : undefined}
+                  onClick={() => handleNavigation(item.path)}
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 group ${
                     item.active 
                       ? 'bg-white text-gray-900 shadow-lg' 

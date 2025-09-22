@@ -1,4 +1,4 @@
-import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Utensils, 
   Car, 
@@ -24,6 +24,15 @@ const iconMap = {
 
 export const RecentTransactions = () => {
   const { recentTransactions, loading } = useFinance();
+  const navigate = useNavigate();
+
+  const handleViewAll = () => {
+    navigate('/transactions');
+  };
+
+  const handleShowMore = () => {
+    navigate('/transactions');
+  };
 
   if (loading) {
     return (
@@ -55,7 +64,10 @@ export const RecentTransactions = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-900">Recent Transactions</h2>
-        <button className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+        <button 
+          onClick={handleViewAll}
+          className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+        >
           View All →
         </button>
       </div>
@@ -100,7 +112,10 @@ export const RecentTransactions = () => {
 
       {/* More Options */}
       <div className="mt-4 pt-4 border-t border-gray-100">
-        <button className="w-full flex items-center justify-center py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors">
+        <button 
+          onClick={handleShowMore}
+          className="w-full flex items-center justify-center py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
+        >
           <MoreHorizontal size={16} className="mr-2" />
           Show More Transactions
         </button>

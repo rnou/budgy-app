@@ -84,6 +84,51 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
+  // Update transaction
+  const updateTransaction = async (transactionId, updatedData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/transactions/${transactionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...updatedData,
+          id: transactionId,
+          date: new Date().toISOString().split('T')[0]
+        })
+      });
+
+      if (response.ok) {
+        const updatedTransaction = await response.json();
+        setTransactions(prev => 
+          prev.map(t => t.id === transactionId ? updatedTransaction : t)
+        );
+        await fetchData(); // Refresh to update stats
+      }
+    } catch (err) {
+      console.error('Error updating transaction:', err);
+      setError('Failed to update transaction');
+    }
+  };
+
+  // Delete transaction
+  const deleteTransaction = async (transactionId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/transactions/${transactionId}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        setTransactions(prev => prev.filter(t => t.id !== transactionId));
+        await fetchData(); // Refresh to update stats
+      }
+    } catch (err) {
+      console.error('Error deleting transaction:', err);
+      setError('Failed to delete transaction');
+    }
+  };
+
   // Update savings pot
   const updateSavingsPot = async (potId, newAmount) => {
     try {
@@ -152,6 +197,8 @@ export const FinanceProvider = ({ children }) => {
     // Actions
     refreshData: fetchData,
     addTransaction,
+    updateTransaction,
+    deleteTransaction,
     updateSavingsPot,
     updateBudget,
     
