@@ -68,25 +68,29 @@ export const FinanceProvider = ({ children }) => {
         },
         body: JSON.stringify({
           ...transactionData,
-          id: Date.now(),
+          id: Date.now().toString(), // Convert to string to match existing format
           date: new Date().toISOString().split('T')[0]
         })
       });
       
-      if (response.ok) {
-        const newTransaction = await response.json();
-        setTransactions(prev => [newTransaction, ...prev]);
-        await fetchData(); // Refresh all data to update stats
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const newTransaction = await response.json();
+      setTransactions(prev => [newTransaction, ...prev]);
+      await fetchData(); // Refresh all data to update stats
     } catch (err) {
       console.error('Error adding transaction:', err);
-      setError('Failed to add transaction');
+      setError(`Failed to add transaction: ${err.message}`);
     }
   };
 
   // Update transaction
   const updateTransaction = async (transactionId, updatedData) => {
     try {
+      console.log('Updating transaction with ID:', transactionId); // Debug log
+      
       const response = await fetch(`${API_BASE_URL}/transactions/${transactionId}`, {
         method: 'PUT',
         headers: {
@@ -99,33 +103,39 @@ export const FinanceProvider = ({ children }) => {
         })
       });
 
-      if (response.ok) {
-        const updatedTransaction = await response.json();
-        setTransactions(prev => 
-          prev.map(t => t.id === transactionId ? updatedTransaction : t)
-        );
-        await fetchData(); // Refresh to update stats
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const updatedTransaction = await response.json();
+      setTransactions(prev => 
+        prev.map(t => t.id == transactionId ? updatedTransaction : t) // Use == instead of === for flexible comparison
+      );
+      await fetchData(); // Refresh to update stats
     } catch (err) {
       console.error('Error updating transaction:', err);
-      setError('Failed to update transaction');
+      setError(`Failed to update transaction: ${err.message}`);
     }
   };
 
   // Delete transaction
   const deleteTransaction = async (transactionId) => {
     try {
+      console.log('Deleting transaction with ID:', transactionId); // Debug log
+      
       const response = await fetch(`${API_BASE_URL}/transactions/${transactionId}`, {
         method: 'DELETE'
       });
 
-      if (response.ok) {
-        setTransactions(prev => prev.filter(t => t.id !== transactionId));
-        await fetchData(); // Refresh to update stats
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      setTransactions(prev => prev.filter(t => t.id != transactionId)); // Use != instead of !== for flexible comparison
+      await fetchData(); // Refresh to update stats
     } catch (err) {
       console.error('Error deleting transaction:', err);
-      setError('Failed to delete transaction');
+      setError(`Failed to delete transaction: ${err.message}`);
     }
   };
 
