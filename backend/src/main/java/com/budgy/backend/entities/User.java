@@ -53,7 +53,7 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-/*
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transaction> transactions = new ArrayList<>();
 
@@ -64,7 +64,7 @@ public class User {
     private List<SavingPot> savingPots = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RecurringBill> recurringBills = new ArrayList<>();*/
+    private List<RecurringBill> recurringBills = new ArrayList<>();
 
     private String generateInitials(String name) {
         if (name == null || name.trim().isEmpty()) return "";
