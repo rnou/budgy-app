@@ -3,6 +3,10 @@ package com.budgy.backend.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -11,6 +15,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "budgets")
 public class Budget {
@@ -48,37 +56,4 @@ public class Budget {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Constructors
-    public Budget() {}
-
-    public Budget(String category, BigDecimal limitAmount, User user) {
-        this.category = category;
-        this.limitAmount = limitAmount;
-        this.user = user;
-    }
-
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
-
-    public BigDecimal getSpent() { return spent; }
-    public void setSpent(BigDecimal spent) { this.spent = spent; }
-
-    public BigDecimal getLimitAmount() { return limitAmount; }
-    public void setLimitAmount(BigDecimal limitAmount) { this.limitAmount = limitAmount; }
-
-    public String getColor() { return color; }
-    public void setColor(String color) { this.color = color; }
-
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-
-    public List<Transaction> getTransactions() { return transactions; }
-    public void setTransactions(List<Transaction> transactions) { this.transactions = transactions; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
