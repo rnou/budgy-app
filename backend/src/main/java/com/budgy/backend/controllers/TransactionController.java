@@ -14,7 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users/{userId}/transactions")
+@RequestMapping("/api/users/{userId}/transactions")
 @RequiredArgsConstructor
 public class TransactionController {
 

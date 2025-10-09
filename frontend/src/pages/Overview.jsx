@@ -8,7 +8,7 @@ import { useFinance } from '../contexts/FinanceContext';
 import { Wallet, TrendingUp, TrendingDown, PiggyBank } from 'lucide-react';
 
 export const Overview = () => {
-  const { stats, loading, error } = useFinance();
+  const { /*stats,*/ loading, error } = useFinance();
 
   if (loading) {
     return <LoadingSpinner />;
@@ -25,10 +25,13 @@ export const Overview = () => {
     );
   }
 
+  /*
   if (!stats) {
     return <LoadingSpinner />;
   }
+  */
 
+  /*
   const statsData = [
     {
       title: "Current Balance",
@@ -63,6 +66,7 @@ export const Overview = () => {
       trendValue: stats.savingsChange
     }
   ];
+  */
 
   return (
     <div className="p-4 md:p-8 space-y-8">
@@ -73,6 +77,7 @@ export const Overview = () => {
       </div>
 
       {/* Stats Cards Grid */}
+      {/*
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {statsData.map((stat, index) => (
           <StatsCard
@@ -86,6 +91,7 @@ export const Overview = () => {
           />
         ))}
       </div>
+      */}
 
       {/* Secondary Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
