@@ -18,3 +18,12 @@ logging:
     root: INFO
     com.budgy.backend: DEBUG
     org.hibernate.SQL: DEBUG
+
+# JWT Configuration
+jwt:
+  # IMPORTANT: In production, use environment variables instead of hardcoding
+  # This secret must be at least 256 bits (32 characters) for HS256 algorithm
+  # Generate a secure secret: openssl rand -base64 32
+  secret: ${JWT_SECRET:budgySecretKeyForJWTTokenGenerationAndValidation123456789012345678}
+  # Token expiration: 86400000 ms = 24 hours
+  expiration: ${JWT_EXPIRATION:86400000}
