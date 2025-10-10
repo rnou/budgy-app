@@ -1,3 +1,4 @@
+
 package com.budgy.backend.config;
 
 import com.budgy.backend.security.JwtAuthenticationFilter;
@@ -29,8 +30,15 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    /**
+     * Password Encoder Bean
+     *
+     * This is a STATIC method to avoid circular dependency.
+     * Static @Bean methods are initialized early in the Spring context lifecycle,
+     * before other beans that might depend on them.
+     */
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public static PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
