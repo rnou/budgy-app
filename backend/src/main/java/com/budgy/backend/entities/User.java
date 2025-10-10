@@ -66,11 +66,23 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RecurringBill> recurringBills = new ArrayList<>();
 
-    private String generateInitials(String name) {
-        if (name == null || name.trim().isEmpty()) return "";
-        String[] parts = name.trim().split(" ");
-        if (parts.length == 1) return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
-        return (parts[0].charAt(0) + "" + parts[parts.length - 1].charAt(0)).toUpperCase();
+    /**
+     * Generate initials before persisting to database
+     */
+    @PrePersist
+    @PreUpdate
+    public void generateInitialsBeforeSave() {
+        if (this.initials == null || this.initials.isEmpty()) {
+            this.initials = generateInitials(this.name);
+        }
     }
 
+    private String generateInitials(String name) {
+        if (name == null || name.trim().isEmpty()) return "";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        }
+        return (parts[0].charAt(0) + "" + parts[parts.length - 1].charAt(0)).toUpperCase();
+    }
 }
