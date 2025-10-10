@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users/{userId}/budgets")
+@RequestMapping("/api/v1/users/{userId}/budgets")
 @RequiredArgsConstructor
 public class BudgetController {
 

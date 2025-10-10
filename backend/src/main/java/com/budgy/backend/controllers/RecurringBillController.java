@@ -14,7 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users/{userId}/recurring-bills")
+@RequestMapping("/api/v1/users/{userId}/recurring-bills")
 @RequiredArgsConstructor
 public class RecurringBillController {
 

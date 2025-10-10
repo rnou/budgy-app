@@ -1,4 +1,3 @@
-
 package com.budgy.backend.config;
 
 import com.budgy.backend.security.JwtAuthenticationFilter;
@@ -16,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
  * Security Configuration
@@ -29,11 +29,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     /**
      * Password Encoder Bean
      *
-     * This is a STATIC method to avoid circular dependency.
+     * IMPORTANT: This is a STATIC method to avoid circular dependency.
      * Static @Bean methods are initialized early in the Spring context lifecycle,
      * before other beans that might depend on them.
      */
@@ -50,6 +51,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // Enable CORS with our custom configuration from WebConfig
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+
                 // Stateless session management (JWT-based)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
