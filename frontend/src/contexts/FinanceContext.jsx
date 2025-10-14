@@ -1,32 +1,52 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { useAuth } from "./AuthContext";
+import {
+  getDashboardStats,
+  getTransactions,
+  createTransaction,
+  updateTransaction as updateTransactionAPI,
+  deleteTransaction as deleteTransactionAPI,
+  getBudgets,
+  updateBudget as updateBudgetAPI,
+  getSavingPots,
+  updateSavingPot as updateSavingPotAPI,
+  getRecurringBills,
+} from "../services/apiService";
 
 const FinanceContext = createContext();
 
 export const useFinance = () => {
   const context = useContext(FinanceContext);
   if (!context) {
-    throw new Error('useFinance must be used within a FinanceProvider');
+    throw new Error("useFinance must be used within a FinanceProvider");
   }
   return context;
 };
 
-const API_BASE_URL = 'http://localhost:8080/api/v1';
-
 export const FinanceProvider = ({ children }) => {
-  const { user: authUser, getAuthHeader, isAuthenticated } = useAuth();
+  const { user: authUser, isAuthenticated } = useAuth();
 
-  // const [stats, setStats] = useState(null);
-  const [transactions, setTransactions] = useState([]);
-  const [budgets, setBudgets] = useState([]);
-  const [savingsPots, setSavingsPots] = useState([]);
-  const [recurringBills, setRecurringBills] = useState([]);
+  // Single state for all financial data - Improvement #3
+  const [financialData, setFinancialData] = useState({
+    dashboardStats: null,
+    transactions: [],
+    budgets: [],
+    savingsPots: [],
+    recurringBills: [],
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch all data
-  const fetchData = async () => {
-    if (!isAuthenticated || !authUser) {
+  // Fetch all data at once - Improvement #4
+  const fetchData = useCallback(async () => {
+    if (!isAuthenticated || !authUser?.id) {
       setLoading(false);
       return;
     }
@@ -35,201 +55,171 @@ export const FinanceProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      const userId = authUser.id;
-      const headers = {
-        'Content-Type': 'application/json',
-        ...getAuthHeader()
-      };
+      // Fetch all data in parallel for better performance
+      const [stats, transactions, budgets, savingsPots, recurringBills] =
+        await Promise.all([
+          getDashboardStats(authUser.id),
+          getTransactions(authUser.id),
+          getBudgets(authUser.id),
+          getSavingPots(authUser.id),
+          getRecurringBills(authUser.id),
+        ]);
 
-      const [transactionsRes, budgetsRes, savingsRes, billsRes] = await Promise.all([
-        // fetch(`${API_BASE_URL}/stats`),
-        fetch(`${API_BASE_URL}/users/${userId}/transactions`, { headers }),
-        fetch(`${API_BASE_URL}/users/${userId}/budgets`, { headers }),
-        fetch(`${API_BASE_URL}/users/${userId}/saving-pots`, { headers }),
-        fetch(`${API_BASE_URL}/users/${userId}/recurring-bills`, { headers })
-      ]);
-
-      if (!transactionsRes.ok || /*!statsRes.ok ||*/ !budgetsRes.ok || !savingsRes.ok || !billsRes.ok) {
-        throw new Error('Failed to fetch data from server');
-      }
-
-      const transactionsData = await transactionsRes.json();
-      const budgetsData = await budgetsRes.json();
-      const savingsData = await savingsRes.json();
-      const billsData = await billsRes.json();
-
-      // setStats(statsData);
-      setTransactions(transactionsData);
-      setBudgets(budgetsData);
-      setSavingsPots(savingsData);
-      setRecurringBills(billsData);
+      setFinancialData({
+        dashboardStats: stats,
+        transactions,
+        budgets,
+        savingsPots,
+        recurringBills,
+      });
     } catch (err) {
-      console.error('Error fetching data:', err);
-      setError('Failed to load financial data. Please ensure the backend server is running.');
+      console.error("Error fetching data:", err);
+      setError(err.message || "Failed to load financial data");
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated, authUser?.id]);
 
-  // Add new transaction
+  // Add transaction - Defensive programming with proper error handling
   const addTransaction = async (transactionData) => {
+    if (!authUser?.id) {
+      throw new Error("User not authenticated");
+    }
+
     try {
-      const userId = authUser.id;
-      const response = await fetch(`${API_BASE_URL}/users/${userId}/transactions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader()
-        },
-        body: JSON.stringify(transactionData)
-      });
+      const newTransaction = await createTransaction(
+        authUser.id,
+        transactionData,
+      );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // Update state immutably
+      setFinancialData((prev) => ({
+        ...prev,
+        transactions: [newTransaction, ...prev.transactions],
+      }));
 
-      const newTransaction = await response.json();
-      setTransactions(prev => [newTransaction, ...prev]);
-      await fetchData();
+      await fetchData(); // Refresh to update calculations
     } catch (err) {
-      console.error('Error adding transaction:', err);
-      setError(`Failed to add transaction: ${err.message}`);
+      console.error("Error adding transaction:", err);
       throw err;
     }
   };
 
   // Update transaction
   const updateTransaction = async (transactionId, updatedData) => {
+    if (!authUser?.id) {
+      throw new Error("User not authenticated");
+    }
+
     try {
-      const userId = authUser.id;
-      const response = await fetch(`${API_BASE_URL}/users/${userId}/transactions/${transactionId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader()
-        },
-        body: JSON.stringify(updatedData)
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const updatedTransaction = await response.json();
-      setTransactions(prev =>
-          prev.map(t => t.id === transactionId ? updatedTransaction : t)
+      const updated = await updateTransactionAPI(
+        authUser.id,
+        transactionId,
+        updatedData,
       );
+
+      setFinancialData((prev) => ({
+        ...prev,
+        transactions: prev.transactions.map((t) =>
+          t.id === transactionId ? updated : t,
+        ),
+      }));
+
       await fetchData();
     } catch (err) {
-      console.error('Error updating transaction:', err);
-      setError(`Failed to update transaction: ${err.message}`);
+      console.error("Error updating transaction:", err);
       throw err;
     }
   };
 
   // Delete transaction
   const deleteTransaction = async (transactionId) => {
+    if (!authUser?.id) {
+      throw new Error("User not authenticated");
+    }
+
     try {
-      const userId = authUser.id;
-      const response = await fetch(`${API_BASE_URL}/users/${userId}/transactions/${transactionId}`, {
-        method: 'DELETE',
-        headers: getAuthHeader()
-      });
+      await deleteTransactionAPI(authUser.id, transactionId);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      setFinancialData((prev) => ({
+        ...prev,
+        transactions: prev.transactions.filter((t) => t.id !== transactionId),
+      }));
 
-      setTransactions(prev => prev.filter(t => t.id !== transactionId));
       await fetchData();
     } catch (err) {
-      console.error('Error deleting transaction:', err);
-      setError(`Failed to delete transaction: ${err.message}`);
+      console.error("Error deleting transaction:", err);
       throw err;
     }
   };
 
   // Update savings pot
-  const updateSavingsPot = async (potId, newAmount) => {
+  const updateSavingsPot = async (potId, potData) => {
+    if (!authUser?.id) {
+      throw new Error("User not authenticated");
+    }
+
     try {
-      const pot = savingsPots.find(p => p.id === potId);
-      if (!pot) return;
+      const updated = await updateSavingPotAPI(authUser.id, potId, potData);
 
-      const userId = authUser.id;
-      const response = await fetch(`${API_BASE_URL}/users/${userId}/saving-pots/${potId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader()
-        },
-        body: JSON.stringify({
-          name: pot.name,
-          goal: pot.goal,
-          icon: pot.icon,
-          color: pot.color
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const updatedPot = await response.json();
-      setSavingsPots(prev => prev.map(p => p.id === potId ? updatedPot : p));
+      setFinancialData((prev) => ({
+        ...prev,
+        savingsPots: prev.savingsPots.map((p) =>
+          p.id === potId ? updated : p,
+        ),
+      }));
     } catch (err) {
-      console.error('Error updating savings pot:', err);
-      setError('Failed to update savings pot');
+      console.error("Error updating savings pot:", err);
       throw err;
     }
   };
 
   // Update budget
-  const updateBudget = async (budgetId, spent) => {
+  const updateBudget = async (budgetId, budgetData) => {
+    if (!authUser?.id) {
+      throw new Error("User not authenticated");
+    }
+
     try {
-      const budget = budgets.find(b => b.id === budgetId);
-      if (!budget) return;
+      const updated = await updateBudgetAPI(authUser.id, budgetId, budgetData);
 
-      const userId = authUser.id;
-      const response = await fetch(`${API_BASE_URL}/users/${userId}/budgets/${budgetId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader()
-        },
-        body: JSON.stringify({
-          category: budget.category,
-          limitAmount: budget.limitAmount,
-          color: budget.color
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const updatedBudget = await response.json();
-      setBudgets(prev => prev.map(b => b.id === budgetId ? updatedBudget : b));
+      setFinancialData((prev) => ({
+        ...prev,
+        budgets: prev.budgets.map((b) => (b.id === budgetId ? updated : b)),
+      }));
     } catch (err) {
-      console.error('Error updating budget:', err);
-      setError('Failed to update budget');
+      console.error("Error updating budget:", err);
       throw err;
     }
   };
 
   // Load data when authenticated
   useEffect(() => {
-    if (isAuthenticated && authUser) {
+    if (isAuthenticated && authUser?.id) {
       fetchData();
     }
-  }, [isAuthenticated, authUser]);
+  }, [isAuthenticated, authUser?.id, fetchData]);
+
+  // Computed values with defensive programming - Improvement #2
+  const computedValues = {
+    totalSavings:
+      financialData.savingsPots?.reduce(
+        (sum, pot) => sum + (pot?.saved || 0),
+        0,
+      ) || 0,
+
+    recentTransactions: financialData.transactions?.slice(0, 5) || [],
+
+    upcomingBills:
+      financialData.recurringBills?.filter(
+        (bill) => bill?.status === "pending",
+      ) || [],
+  };
 
   const value = {
     // Data
     user: authUser,
-    transactions,
-    budgets,
-    savingsPots,
-    recurringBills,
+    ...financialData,
 
     // States
     loading,
@@ -244,14 +234,10 @@ export const FinanceProvider = ({ children }) => {
     updateBudget,
 
     // Computed values
-    totalSavings: savingsPots.reduce((sum, pot) => sum + pot.saved, 0),
-    recentTransactions: transactions.slice(0, 5),
-    upcomingBills: recurringBills.filter(bill => bill.status === 'pending')
+    ...computedValues,
   };
 
   return (
-      <FinanceContext.Provider value={value}>
-        {children}
-      </FinanceContext.Provider>
+    <FinanceContext.Provider value={value}>{children}</FinanceContext.Provider>
   );
 };

@@ -1,14 +1,14 @@
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  ArrowUpDown, 
-  PiggyBank, 
-  Wallet, 
+import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  ArrowUpDown,
+  PiggyBank,
+  Wallet,
   Calendar,
   ChevronRight,
-  X
-} from 'lucide-react';
+  X,
+} from "lucide-react";
 
 export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
   const location = useLocation();
@@ -17,34 +17,34 @@ export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
   const menuItems = [
     {
       icon: LayoutDashboard,
-      label: 'Overview',
-      path: '/',
-      active: location.pathname === '/'
+      label: "Overview",
+      path: "/",
+      active: location.pathname === "/",
     },
     {
       icon: ArrowUpDown,
-      label: 'Transactions',
-      path: '/transactions',
-      active: location.pathname === '/transactions'
+      label: "Transactions",
+      path: "/transactions",
+      active: location.pathname === "/transactions",
     },
     {
       icon: PiggyBank,
-      label: 'Budgets',
-      path: '/budgets',
-      active: location.pathname === '/budgets'
+      label: "Budgets",
+      path: "/budgets",
+      active: location.pathname === "/budgets",
     },
     {
       icon: Wallet,
-      label: 'Savings Pots',
-      path: '/savings',
-      active: location.pathname === '/savings'
+      label: "Savings Pots",
+      path: "/savings",
+      active: location.pathname === "/savings",
     },
     {
       icon: Calendar,
-      label: 'Recurring Bills',
-      path: '/bills',
-      active: location.pathname === '/bills'
-    }
+      label: "Recurring Bills",
+      path: "/bills",
+      active: location.pathname === "/bills",
+    },
   ];
 
   const handleNavigation = (path) => {
@@ -58,20 +58,23 @@ export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
     <>
       {/* Mobile Overlay */}
       {isMobile && isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
           onClick={onClose}
         />
       )}
-      
+
       {/* Sidebar */}
-      <div className={`
+      <div
+        className={`
         bg-gray-900 text-white h-full transition-all duration-300 z-50
-        ${isMobile 
-          ? `fixed top-0 left-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'} w-64` 
-          : `${isOpen ? 'w-64' : 'w-20'}`
+        ${
+          isMobile
+            ? `fixed top-0 left-0 ${isOpen ? "translate-x-0" : "-translate-x-full"} w-64`
+            : `${isOpen ? "w-64" : "w-20"}`
         }
-      `}>
+      `}
+      >
         <div className="p-6">
           {/* Mobile Close Button */}
           {isMobile && (
@@ -84,7 +87,7 @@ export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
                   BUDGY
                 </span>
               </div>
-              <button 
+              <button
                 onClick={onClose}
                 className="p-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-all duration-200"
               >
@@ -101,9 +104,9 @@ export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
                   key={index}
                   onClick={() => handleNavigation(item.path)}
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 group ${
-                    item.active 
-                      ? 'bg-white text-gray-900 shadow-lg' 
-                      : 'hover:bg-gray-800 text-gray-300 hover:text-white'
+                    item.active
+                      ? "bg-white text-gray-900 shadow-lg"
+                      : "hover:bg-gray-800 text-gray-300 hover:text-white"
                   }`}
                 >
                   <Icon size={20} className="min-w-[20px]" />
