@@ -4,11 +4,14 @@ import com.budgy.backend.dto.response.DashboardStatsDTO;
 import com.budgy.backend.services.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Dashboard Controller
- *
+ * <p>
  * Provides aggregated statistics and overview data
  */
 @RestController
@@ -20,9 +23,9 @@ public class DashboardController {
 
     /**
      * Get Dashboard Statistics
-     *
+     * <p>
      * GET /api/v1/users/{userId}/dashboard/stats
-     *
+     * <p>
      * Returns:
      * - Current balance with change percentage
      * - Income (current month) with change from last month

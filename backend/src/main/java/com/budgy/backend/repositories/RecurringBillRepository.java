@@ -1,7 +1,7 @@
 package com.budgy.backend.repositories;
 
-import com.budgy.backend.enums.BillStatus;
 import com.budgy.backend.entities.RecurringBill;
+import com.budgy.backend.enums.BillStatus;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;

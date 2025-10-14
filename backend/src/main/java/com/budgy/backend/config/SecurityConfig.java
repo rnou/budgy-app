@@ -19,7 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
  * Security Configuration
- *
+ * <p>
  * Configures Spring Security for JWT-based authentication.
  * Defines which endpoints are public and which require authentication.
  */
@@ -33,7 +33,7 @@ public class SecurityConfig {
 
     /**
      * Password Encoder Bean
-     *
+     * <p>
      * IMPORTANT: This is a STATIC method to avoid circular dependency.
      * Static @Bean methods are initialized early in the Spring context lifecycle,
      * before other beans that might depend on them.

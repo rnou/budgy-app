@@ -17,7 +17,7 @@ import java.io.IOException;
 
 /**
  * JWT Authentication Filter
- *
+ * <p>
  * This filter intercepts every HTTP request to check for a valid JWT token.
  * If valid, it authenticates the user for that request.
  */

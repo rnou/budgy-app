@@ -2,14 +2,17 @@ package com.budgy.backend.services;
 
 import com.budgy.backend.dto.TransactionDTO;
 import com.budgy.backend.dto.response.TransactionResponseDTO;
-import com.budgy.backend.entities.*;
+import com.budgy.backend.entities.Budget;
+import com.budgy.backend.entities.SavingPot;
+import com.budgy.backend.entities.Transaction;
+import com.budgy.backend.entities.User;
 import com.budgy.backend.enums.TransactionType;
 import com.budgy.backend.exceptions.ResourceNotFoundException;
 import com.budgy.backend.mappers.TransactionMapper;
-import com.budgy.backend.repositories.TransactionRepository;
-import com.budgy.backend.repositories.UserRepository;
 import com.budgy.backend.repositories.BudgetRepository;
 import com.budgy.backend.repositories.SavingPotRepository;
+import com.budgy.backend.repositories.TransactionRepository;
+import com.budgy.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor

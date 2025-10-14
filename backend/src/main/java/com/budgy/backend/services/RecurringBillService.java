@@ -2,9 +2,9 @@ package com.budgy.backend.services;
 
 import com.budgy.backend.dto.RecurringBillDTO;
 import com.budgy.backend.dto.response.RecurringBillResponseDTO;
-import com.budgy.backend.enums.BillStatus;
 import com.budgy.backend.entities.RecurringBill;
 import com.budgy.backend.entities.User;
+import com.budgy.backend.enums.BillStatus;
 import com.budgy.backend.exceptions.ResourceNotFoundException;
 import com.budgy.backend.mappers.RecurringBillMapper;
 import com.budgy.backend.repositories.RecurringBillRepository;

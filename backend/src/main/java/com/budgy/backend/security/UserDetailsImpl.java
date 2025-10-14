@@ -11,7 +11,7 @@ import java.util.Collections;
 
 /**
  * Custom UserDetails Implementation
- *
+ * <p>
  * This class wraps our User entity and implements Spring Security's UserDetails interface.
  * Spring Security needs UserDetails to perform authentication and authorization.
  */

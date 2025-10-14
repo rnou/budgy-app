@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  * Dashboard Service
- *
+ * <p>
  * Provides aggregated financial statistics for dashboard display
  * including income, expenses, savings, and their month-over-month changes
  */
@@ -141,10 +141,10 @@ public class DashboardService {
      * Calculate total savings at the end of previous month
      * Subtracts current month's saving additions from current total
      *
-     * @param userId The user ID
-     * @param currentSavings Current total savings
+     * @param userId              The user ID
+     * @param currentSavings      Current total savings
      * @param startOfCurrentMonth Start date of current month
-     * @param endOfCurrentMonth End date of current month
+     * @param endOfCurrentMonth   End date of current month
      * @return Savings total at end of previous month
      */
     private BigDecimal calculatePreviousMonthSavings(
@@ -188,7 +188,7 @@ public class DashboardService {
      * Used for the balance card percentage indicator
      *
      * @param currentBalance User's current balance
-     * @param change Amount of change (income - expenses)
+     * @param change         Amount of change (income - expenses)
      * @return Percentage change as double
      */
     private Double calculateBalanceChangePercent(BigDecimal currentBalance, BigDecimal change) {

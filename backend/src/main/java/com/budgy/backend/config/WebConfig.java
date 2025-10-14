@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 /**
  * Web Configuration
- *
+ * <p>
  * Configures CORS to allow frontend to communicate with backend.
  */
 @Configuration

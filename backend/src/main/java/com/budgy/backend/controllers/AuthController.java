@@ -22,7 +22,7 @@ import java.util.Map;
 
 /**
  * Authentication Controller
- *
+ * <p>
  * Handles authentication-related endpoints: login, register, and token validation.
  */
 @AllArgsConstructor
@@ -36,7 +36,7 @@ public class AuthController {
 
     /**
      * Login Endpoint
-     *
+     * <p>
      * POST /api/v1/auth/login
      * Request Body: { "email": "user@example.com", "password": "password123" }
      * Response: { "token": "jwt-token", "type": "Bearer", "email": "...", "name": "...", "userId": 1 }
@@ -87,7 +87,7 @@ public class AuthController {
 
     /**
      * Register Endpoint
-     *
+     * <p>
      * POST /api/v1/auth/register
      * Request Body: { "name": "John Doe", "email": "user@example.com", "password": "password123" }
      * Response: { "token": "jwt-token", "type": "Bearer", "email": "...", "name": "...", "userId": 1 }
@@ -122,7 +122,7 @@ public class AuthController {
 
     /**
      * Validate Token Endpoint
-     *
+     * <p>
      * GET /api/v1/auth/validate-token
      * Headers: Authorization: Bearer <jwt-token>
      * Response: { "valid": true, "user": { "id": 1, "name": "...", "email": "..." } }

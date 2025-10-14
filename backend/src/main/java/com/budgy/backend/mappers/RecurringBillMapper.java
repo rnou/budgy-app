@@ -2,9 +2,9 @@ package com.budgy.backend.mappers;
 
 import com.budgy.backend.dto.RecurringBillDTO;
 import com.budgy.backend.dto.response.RecurringBillResponseDTO;
-import com.budgy.backend.enums.BillStatus;
 import com.budgy.backend.entities.RecurringBill;
 import com.budgy.backend.entities.User;
+import com.budgy.backend.enums.BillStatus;
 
 public class RecurringBillMapper {
 

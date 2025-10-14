@@ -16,7 +16,7 @@ import java.util.function.Function;
 
 /**
  * JWT Utility Class
- *
+ * <p>
  * Handles all JWT operations: generation, validation, and extraction of information.
  */
 @Component

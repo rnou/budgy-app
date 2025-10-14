@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 
 /**
  * Dashboard Statistics Response DTO
- *
+ * <p>
  * Contains all financial overview data for the dashboard
  */
 @Data
