@@ -24,6 +24,16 @@ const apiCall = async (url, options = {}) => {
     throw new Error(error.message || `HTTP error! status: ${response.status}`);
   }
 
+  if (response.status === 204) {
+    return null;
+  }
+
+  // Handle responses with no content
+  const contentType = response.headers.get("content-type");
+  if (!contentType || !contentType.includes("application/json")) {
+    return null;
+  }
+
   return response.json();
 };
 

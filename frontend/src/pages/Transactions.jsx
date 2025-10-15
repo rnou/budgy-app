@@ -118,6 +118,7 @@ export const Transactions = () => {
         ...formData,
         amount:
             parseFloat(formData.amount) * (formData.type === "expense" ? -1 : 1),
+        transactionDate: new Date().toISOString().split('T')[0],
       };
 
       if (modalState.editingTransaction) {
