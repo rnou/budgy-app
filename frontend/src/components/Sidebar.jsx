@@ -8,6 +8,8 @@ import {
   Calendar,
   ChevronRight,
   X,
+  User,
+  Settings,
 } from "lucide-react";
 
 export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
@@ -47,6 +49,21 @@ export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
     },
   ];
 
+  const bottomMenuItems = [
+    {
+      icon: User,
+      label: "Profile",
+      path: "/profile",
+      active: location.pathname === "/profile",
+    },
+    {
+      icon: Settings,
+      label: "Settings",
+      path: "/settings",
+      active: location.pathname === "/settings",
+    },
+  ];
+
   const handleNavigation = (path) => {
     navigate(path);
     if (isMobile && onClose) {
@@ -67,15 +84,15 @@ export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
         {/* Sidebar */}
         <div
             className={`
-        bg-gray-900 dark:bg-gray-950 text-white h-full transition-all duration-300 z-50
-        ${
+          bg-gray-900 dark:bg-gray-950 text-white h-full transition-all duration-300 z-50 flex flex-col
+          ${
                 isMobile
                     ? `fixed top-0 left-0 ${isOpen ? "translate-x-0" : "-translate-x-full"} w-64`
                     : `${isOpen ? "w-64" : "w-20"}`
             }
-      `}
+        `}
         >
-          <div className="p-6">
+          <div className="p-6 flex-1 flex flex-col">
             {/* Mobile Close Button */}
             {isMobile && (
                 <div className="flex justify-between items-center mb-6">
@@ -96,7 +113,8 @@ export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
                 </div>
             )}
 
-            <nav className="space-y-2">
+            {/* Main Navigation */}
+            <nav className="space-y-2 flex-1">
               {menuItems.map((item, index) => {
                 const Icon = item.icon;
                 return (
@@ -122,6 +140,36 @@ export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
                 );
               })}
             </nav>
+
+            {/* Bottom Navigation (Profile & Settings) */}
+            <div className="mt-auto pt-6 border-t border-gray-800 dark:border-gray-900">
+              <nav className="space-y-2">
+                {bottomMenuItems.map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                      <div
+                          key={index}
+                          onClick={() => handleNavigation(item.path)}
+                          className={`flex items-center space-x-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 group ${
+                              item.active
+                                  ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-lg"
+                                  : "hover:bg-gray-800 dark:hover:bg-gray-900 text-gray-300 hover:text-white"
+                          }`}
+                      >
+                        <Icon size={20} className="min-w-[20px]" />
+                        {(isOpen || isMobile) && (
+                            <>
+                              <span className="font-medium">{item.label}</span>
+                              {item.active && (
+                                  <ChevronRight size={16} className="ml-auto" />
+                              )}
+                            </>
+                        )}
+                      </div>
+                  );
+                })}
+              </nav>
+            </div>
           </div>
         </div>
       </>
