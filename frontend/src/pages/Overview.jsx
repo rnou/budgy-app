@@ -80,11 +80,11 @@ const Overview = () => {
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-8 space-y-8 min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Overview</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Overview</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">
           Track your financial health at a glance
         </p>
       </div>
@@ -92,7 +92,7 @@ const Overview = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Current Balance */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-2">
             <div className="bg-blue-500 p-3 rounded-lg">
               <svg
@@ -115,14 +115,14 @@ const Overview = () => {
               {formatPercentage(stats?.balanceChangePercent)}
             </span>
           </div>
-          <p className="text-sm text-gray-600 mb-1">Current Balance</p>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Current Balance</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatCurrency(stats?.currentBalance)}
           </p>
         </div>
 
         {/* Income */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-2">
             <div className="bg-green-500 p-3 rounded-lg">
               <svg
@@ -145,14 +145,14 @@ const Overview = () => {
               {formatPercentage(stats?.incomeChangePercent)}
             </span>
           </div>
-          <p className="text-sm text-gray-600 mb-1">Income</p>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Income</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatCurrency(stats?.income)}
           </p>
         </div>
 
         {/* Expenses */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-2">
             <div className="bg-red-500 p-3 rounded-lg">
               <svg
@@ -175,14 +175,14 @@ const Overview = () => {
               {formatPercentage(stats?.expenseChangePercent)}
             </span>
           </div>
-          <p className="text-sm text-gray-600 mb-1">Expenses</p>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Expenses</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatCurrency(stats?.expenses)}
           </p>
         </div>
 
         {/* Savings */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-2">
             <div className="bg-purple-500 p-3 rounded-lg">
               <svg
@@ -205,8 +205,8 @@ const Overview = () => {
               {formatPercentage(stats?.savingsChangePercent)}
             </span>
           </div>
-          <p className="text-sm text-gray-600 mb-1">Savings</p>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Savings</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatCurrency(stats?.savings)}
           </p>
         </div>
@@ -214,8 +214,8 @@ const Overview = () => {
 
       {/* Period Info */}
       {stats?.period && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-700">
+        <div className="bg-blue-50 dark:bg-gray-800 border border-blue-200 dark:border-none rounded-lg p-4">
+          <p className="text-sm text-blue-700 dark:text-gray-400">
             📊 Statistics for{" "}
             <span className="font-semibold">{stats.period}</span>
             {stats.transactionCount > 0 && (
