@@ -160,7 +160,6 @@ const SavingPots = () => {
 
             setActionType(null);
             setActionAmount('');
-            setSelectedPot(null);
         } catch (error) {
             console.error('Error processing action:', error);
             alert(error.message || 'Failed to process transaction');

@@ -279,9 +279,15 @@ export const Transactions = () => {
 
                 <div className="flex items-center space-x-4 flex-shrink-0">
                   <span
-                      className={`text-lg font-bold ${isPositive ? "text-green-600" : "text-gray-900 dark:text-white"}`}
+                      className={`text-lg font-bold ${
+                          type?.toUpperCase() === 'SAVING' ? 'text-green-600' :
+                              type?.toUpperCase() === 'WITHDRAW' ? 'text-red-600' :
+                                  isPositive ? 'text-green-600' : 'text-gray-900 dark:text-white'
+                      }`}
                   >
-                    {isPositive ? "+" : ""}${formatAmount(amount)}
+                    {type?.toUpperCase() === 'SAVING' || type?.toUpperCase() === 'INCOME' ? '+' : ''}
+                    {type?.toUpperCase() === 'WITHDRAW' ? '-' : ''}
+                    ${formatAmount(amount)}
                   </span>
 
                   <div className="flex items-center space-x-2">
@@ -521,6 +527,7 @@ const TransactionModal = ({
                         ))}
                       </select>
                     </div>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Icon
@@ -538,6 +545,7 @@ const TransactionModal = ({
                         ))}
                       </select>
                     </div>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Color
