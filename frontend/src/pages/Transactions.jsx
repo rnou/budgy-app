@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { Plus, Search, Filter, Edit2, Trash2, ShoppingBag, Link2 } from "lucide-react";
+import { Plus, Search, Filter, Edit2, Trash2, ShoppingBag, Link2, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { useFinance } from "../contexts/FinanceContext";
 import LoadingSpinner from "../components/LoadingSpinner";
 import {
@@ -80,6 +80,23 @@ export const Transactions = () => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
 
+      // Based on transaction type
+      if (name === 'type') {
+        // INCOME: Clear both
+        if (value === 'income') {
+          updated.budgetId = null;
+          updated.savingPotId = null;
+        }
+        // EXPENSE: Clear saving pot, keep budget
+        else if (value === 'expense') {
+          updated.savingPotId = null;
+        }
+        // SAVING/WITHDRAW: Clear budget, keep saving pot
+        else if (value === 'saving' || value === 'withdraw') {
+          updated.budgetId = null;
+        }
+      }
+
       // Clear savingPotId when budgetId is set and vice versa
       if (name === 'budgetId' && value) {
         updated.savingPotId = null;
@@ -114,7 +131,7 @@ export const Transactions = () => {
       name: transaction.name || "",
       amount: Math.abs(Number(transaction.amount) || 0).toString(),
       category: transaction.category || "other",
-      type: transaction.type?.toLowerCase() || "expense", // ✨ FIX: Convert to lowercase for form
+      type: transaction.type?.toLowerCase() || "expense",
       icon: transaction.icon || "ShoppingBag",
       color: transaction.color || "bg-blue-500",
       budgetId: transaction.budgetId || null,
@@ -135,10 +152,21 @@ export const Transactions = () => {
     e.preventDefault();
 
     try {
+      // AMOUNT HANDLING: Different for each type
+      let amount = parseFloat(formData.amount);
+
+      // EXPENSE: Store as negative
+      if (formData.type === "expense") {
+        amount = -Math.abs(amount);
+      }
+      // INCOME/SAVING/WITHDRAW: Store as positive
+      else {
+        amount = Math.abs(amount);
+      }
+
       const transactionData = {
         ...formData,
-        amount:
-            parseFloat(formData.amount) * (formData.type === "expense" ? -1 : 1),
+        amount: amount,
         transactionDate: new Date().toISOString().split('T')[0],
         budgetId: formData.budgetId || null,
         savingPotId: formData.savingPotId || null,
@@ -195,14 +223,22 @@ export const Transactions = () => {
     return isNaN(num) ? "0.00" : Math.abs(num).toFixed(2);
   };
 
+  // Helper to get icon for transaction type
+  const getTypeIcon = (type) => {
+    const typeUpper = type?.toUpperCase();
+    if (typeUpper === 'SAVING') return ArrowUpCircle;
+    if (typeUpper === 'WITHDRAW') return ArrowDownCircle;
+    return null;
+  };
+
   const renderTransaction = useCallback(
       (transaction) => {
         if (!transaction) return null;
 
-        // ✨ FIX: Use transactionDate instead of date
-        const { id, icon, color, name, category, transactionDate, amount, budgetId, savingPotId } = transaction;
+        const { id, icon, color, name, category, transactionDate, amount, type, budgetId, savingPotId } = transaction;
         const Icon = ICON_MAP[icon] || ShoppingBag;
         const isPositive = Number(amount) > 0;
+        const TypeIcon = getTypeIcon(type);
 
         // Find linked budget or pot
         const linkedBudget = budgetId && budgets?.find(b => b.id === budgetId);
@@ -215,7 +251,7 @@ export const Transactions = () => {
                   <div
                       className={`w-12 h-12 rounded-full ${color || "bg-gray-500"} flex items-center justify-center flex-shrink-0`}
                   >
-                    <Icon size={20} className="text-white" />
+                    {TypeIcon ? <TypeIcon size={20} className="text-white" /> : <Icon size={20} className="text-white" />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-medium text-gray-900 dark:text-white truncate">
@@ -343,6 +379,8 @@ export const Transactions = () => {
                 <option value={FILTER_TYPES.ALL}>All Types</option>
                 <option value={FILTER_TYPES.INCOME}>Income</option>
                 <option value={FILTER_TYPES.EXPENSE}>Expenses</option>
+                <option value={FILTER_TYPES.SAVING}>Savings</option>
+                <option value={FILTER_TYPES.WITHDRAW}>Withdrawals</option>
               </select>
             </div>
           </div>
@@ -395,10 +433,13 @@ const TransactionModal = ({
                           }) => {
   if (!isOpen) return null;
 
+  // DETERMINE WHAT TO SHOW BASED ON TYPE
+  const showBudgetSelector = formData.type === 'expense';
+  const showSavingPotSelector = formData.type === 'saving' || formData.type === 'withdraw';
+  const showCategoryAndIcon = formData.type === 'income' || formData.type === 'expense';
+
   // Filter budgets for expenses only
-  const availableBudgets = budgets?.filter(b =>
-      formData.type === 'expense' && b.category
-  ) || [];
+  const availableBudgets = budgets?.filter(b => b.category) || [];
 
   return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -409,6 +450,24 @@ const TransactionModal = ({
             </h2>
 
             <form onSubmit={onSubmit} className="space-y-4">
+              {/* Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Type
+                </label>
+                <select
+                    name="type"
+                    value={formData.type}
+                    onChange={onFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                  <option value="saving">Saving</option>
+                  <option value="withdraw">Withdraw</option>
+                </select>
+              </div>
+
               {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -442,78 +501,62 @@ const TransactionModal = ({
                 />
               </div>
 
-              {/* Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Type
-                </label>
-                <select
-                    name="type"
-                    value={formData.type}
-                    onChange={onFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="expense">Expense</option>
-                  <option value="income">Income</option>
-                </select>
-              </div>
-
-              {/* Category */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Category
-                </label>
-                <select
-                    name="category"
-                    value={formData.category}
-                    onChange={onFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {TRANSACTION_CATEGORIES.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Icon */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Icon
-                </label>
-                <select
-                    name="icon"
-                    value={formData.icon}
-                    onChange={onFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {TRANSACTION_CATEGORIES.map((cat) => (
-                      <option key={cat.icon} value={cat.icon}>
-                        {cat.label}
-                      </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Color */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Color
-                </label>
-                <select
-                    name="color"
-                    value={formData.color}
-                    onChange={onFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {COLOR_OPTIONS.map((color) => (
-                      <option key={color.value} value={color.value}>
-                        {color.label}
-                      </option>
-                  ))}
-                </select>
-              </div>
+              {/* Category & Icon }
+              {showCategoryAndIcon && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Category
+                      </label>
+                      <select
+                          name="category"
+                          value={formData.category}
+                          onChange={onFormChange}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        {TRANSACTION_CATEGORIES.map((cat) => (
+                            <option key={cat.value} value={cat.value}>
+                              {cat.label}
+                            </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Icon
+                      </label>
+                      <select
+                          name="icon"
+                          value={formData.icon}
+                          onChange={onFormChange}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        {TRANSACTION_CATEGORIES.map((cat) => (
+                            <option key={cat.icon} value={cat.icon}>
+                              {cat.label}
+                            </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Color
+                      </label>
+                      <select
+                          name="color"
+                          value={formData.color}
+                          onChange={onFormChange}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        {COLOR_OPTIONS.map((color) => (
+                            <option key={color.value} value={color.value}>
+                              {color.label}
+                            </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+              )}
 
               {/* Link to Budget or Saving Pot */}
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -524,7 +567,7 @@ const TransactionModal = ({
 
                 <div className="space-y-3">
                   {/* Link to Budget */}
-                  {formData.type === 'expense' && (
+                  {showBudgetSelector && (
                       <div>
                         <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
                           Link to Budget
@@ -534,7 +577,6 @@ const TransactionModal = ({
                             value={formData.budgetId || ''}
                             onChange={onFormChange}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            disabled={!!formData.savingPotId}
                         >
                           <option value="">No budget</option>
                           {availableBudgets.map((budget) => (
@@ -552,30 +594,32 @@ const TransactionModal = ({
                   )}
 
                   {/* Link to Saving Pot */}
-                  <div>
-                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                      Link to Saving Pot
-                    </label>
-                    <select
-                        name="savingPotId"
-                        value={formData.savingPotId || ''}
-                        onChange={onFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        disabled={!!formData.budgetId}
-                    >
-                      <option value="">No saving pot</option>
-                      {savingsPots?.map((pot) => (
-                          <option key={pot.id} value={pot.id}>
-                            {pot.name} (${pot.saved}/${pot.goal})
-                          </option>
-                      ))}
-                    </select>
-                    {(!savingsPots || savingsPots.length === 0) && (
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          No saving pots available. Create one first!
-                        </p>
-                    )}
-                  </div>
+                  {showSavingPotSelector && (
+                      <div>
+                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                          Link to Saving Pot {formData.type === 'saving' || formData.type === 'withdraw' ? '(Required)' : ''}
+                        </label>
+                        <select
+                            name="savingPotId"
+                            value={formData.savingPotId || ''}
+                            onChange={onFormChange}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required={formData.type === 'saving' || formData.type === 'withdraw'}
+                        >
+                          <option value="">Select saving pot</option>
+                          {savingsPots?.map((pot) => (
+                              <option key={pot.id} value={pot.id}>
+                                {pot.name} (${pot.saved}/${pot.goal})
+                              </option>
+                          ))}
+                        </select>
+                        {(!savingsPots || savingsPots.length === 0) && (
+                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                              No saving pots available. Create one first!
+                            </p>
+                        )}
+                      </div>
+                  )}
 
                   {(formData.budgetId || formData.savingPotId) && (
                       <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">

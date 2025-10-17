@@ -17,6 +17,7 @@ public class SavingPotResponseDTO {
     private String name;
     private BigDecimal saved;
     private BigDecimal goal;
+    private Integer transactionCount;
     private String icon;
     private String color;
     private LocalDateTime createdAt;

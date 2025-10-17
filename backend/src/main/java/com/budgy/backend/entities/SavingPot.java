@@ -39,6 +39,9 @@ public class SavingPot {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal goal;
 
+    @Column(name = "transaction_count", nullable = false)
+    private Integer transactionCount = 0;
+
     private String icon;
 
     private String color;
@@ -57,4 +60,35 @@ public class SavingPot {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public void incrementTransactionCount() {
+        this.transactionCount++;
+    }
+
+    public void decrementTransactionCount() {
+        if (this.transactionCount > 0) {
+            this.transactionCount--;
+        }
+    }
+
+    public void addToSaved(BigDecimal amount) {
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) != 0) {
+            // Use absolute value (amounts might be stored as negative)
+            BigDecimal absoluteAmount = amount.abs();
+            this.saved = this.saved.add(absoluteAmount);
+        }
+    }
+
+    public void subtractFromSaved(BigDecimal amount) {
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) != 0) {
+            // Use absolute value
+            BigDecimal absoluteAmount = amount.abs();
+            this.saved = this.saved.subtract(absoluteAmount);
+
+            // Prevent negative saved
+            if (this.saved.compareTo(BigDecimal.ZERO) < 0) {
+                this.saved = BigDecimal.ZERO;
+            }
+        }
+    }
 }

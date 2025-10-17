@@ -7,6 +7,7 @@ import com.budgy.backend.entities.SavingPot;
 import com.budgy.backend.entities.Transaction;
 import com.budgy.backend.entities.User;
 import com.budgy.backend.enums.TransactionType;
+import com.budgy.backend.exceptions.BadRequestException;
 import com.budgy.backend.exceptions.ResourceNotFoundException;
 import com.budgy.backend.mappers.TransactionMapper;
 import com.budgy.backend.repositories.BudgetRepository;
@@ -61,6 +62,9 @@ public class TransactionService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
+        // Check for invalid combinations
+        validateTransactionType(dto);
+
         Budget budget = null;
         if (dto.getBudgetId() != null) {
             budget = budgetRepository.findById(dto.getBudgetId())
@@ -76,11 +80,22 @@ public class TransactionService {
         Transaction transaction = TransactionMapper.toEntity(dto, user, budget, savingPot);
         Transaction savedTransaction = transactionRepository.save(transaction);
 
-        // Update budget spent and count after creating transaction
         if (budget != null && transaction.getType() == TransactionType.EXPENSE) {
             budget.addToSpent(transaction.getAmount());
             budget.incrementTransactionCount();
             budgetRepository.save(budget);
+        }
+
+        if (savingPot != null) {
+            if (transaction.getType() == TransactionType.SAVING) {
+                savingPot.addToSaved(transaction.getAmount());
+                savingPot.incrementTransactionCount();
+                savingPotRepository.save(savingPot);
+            } else if (transaction.getType() == TransactionType.WITHDRAW) {
+                savingPot.subtractFromSaved(transaction.getAmount());
+                savingPot.incrementTransactionCount();
+                savingPotRepository.save(savingPot);
+            }
         }
 
         return TransactionMapper.toResponse(savedTransaction);
@@ -90,8 +105,12 @@ public class TransactionService {
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction", "id", id));
 
-        // Store old values for budget recalculation
+        // Check for invalid combinations
+        validateTransactionType(dto);
+
+        // Store old values for recalculation
         Budget oldBudget = transaction.getBudget();
+        SavingPot oldSavingPot = transaction.getSavingPot();
         BigDecimal oldAmount = transaction.getAmount();
         TransactionType oldType = transaction.getType();
 
@@ -109,8 +128,11 @@ public class TransactionService {
 
         TransactionMapper.updateEntity(transaction, dto, budget, savingPot);
 
-        // Recalculate budgets before saving
+        // RECALCULATE BUDGETS
         updateBudgetCalculations(oldBudget, oldAmount, oldType, budget, transaction.getAmount(), transaction.getType());
+
+        // RECALCULATE SAVING POTS
+        updateSavingPotCalculations(oldSavingPot, oldAmount, oldType, savingPot, transaction.getAmount(), transaction.getType());
 
         Transaction updatedTransaction = transactionRepository.save(transaction);
 
@@ -121,7 +143,7 @@ public class TransactionService {
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction", "id", id));
 
-        // Update budget before deleting transaction
+        // UPDATE BUDGET before deleting
         if (transaction.getBudget() != null && transaction.getType() == TransactionType.EXPENSE) {
             Budget budget = transaction.getBudget();
             budget.subtractFromSpent(transaction.getAmount());
@@ -129,38 +151,125 @@ public class TransactionService {
             budgetRepository.save(budget);
         }
 
+        // UPDATE SAVING POT before deleting
+        if (transaction.getSavingPot() != null) {
+            SavingPot savingPot = transaction.getSavingPot();
+
+            if (transaction.getType() == TransactionType.SAVING) {
+                savingPot.subtractFromSaved(transaction.getAmount());
+            } else if (transaction.getType() == TransactionType.WITHDRAW) {
+                savingPot.addToSaved(transaction.getAmount());  // Add back what was withdrawn
+            }
+
+            savingPot.decrementTransactionCount();
+            savingPotRepository.save(savingPot);
+        }
+
         transactionRepository.delete(transaction);
     }
 
+    // ==================== VALIDATION ====================
+
     /**
-     * Helper method to update budget calculations when transaction changes.
-     * Handles all cases: budget change, amount change, type change, or combination.
+     * Validates that transaction type matches the linked entity
+     */
+    private void validateTransactionType(TransactionDTO dto) {
+        TransactionType type = TransactionType.valueOf(dto.getType().toUpperCase());
+
+        // Rule 1: EXPENSE can only link to budgets
+        if (type == TransactionType.EXPENSE && dto.getSavingPotId() != null) {
+            throw new BadRequestException("EXPENSE transactions cannot be linked to saving pots. Use SAVING or WITHDRAW instead.");
+        }
+
+        // Rule 2: INCOME cannot link to budgets or pots
+        if (type == TransactionType.INCOME && (dto.getBudgetId() != null || dto.getSavingPotId() != null)) {
+            throw new BadRequestException("INCOME transactions cannot be linked to budgets or saving pots.");
+        }
+
+        // Rule 3: SAVING/WITHDRAW can only link to saving pots
+        if ((type == TransactionType.SAVING || type == TransactionType.WITHDRAW)) {
+            if (dto.getBudgetId() != null) {
+                throw new BadRequestException("SAVING/WITHDRAW transactions cannot be linked to budgets.");
+            }
+            if (dto.getSavingPotId() == null) {
+                throw new BadRequestException("SAVING/WITHDRAW transactions must be linked to a saving pot.");
+            }
+        }
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    /**
+     * Helper method to update budget calculations when transaction changes
      */
     private void updateBudgetCalculations(
             Budget oldBudget, BigDecimal oldAmount, TransactionType oldType,
             Budget newBudget, BigDecimal newAmount, TransactionType newType) {
 
-        // Case 1: Remove from old budget (if it was an expense)
+        // Remove from old budget (if it was an expense)
         if (oldBudget != null && oldType == TransactionType.EXPENSE) {
             oldBudget.subtractFromSpent(oldAmount);
             oldBudget.decrementTransactionCount();
             budgetRepository.save(oldBudget);
         }
 
-        // Case 2: Add to new budget (if it's an expense)
+        // Add to new budget (if it's an expense)
         if (newBudget != null && newType == TransactionType.EXPENSE) {
             // Check if it's the same budget (just updating amount)
             if (oldBudget != null && oldBudget.getId().equals(newBudget.getId()) && oldType == TransactionType.EXPENSE) {
                 // Same budget, same type - just update the difference
                 BigDecimal difference = newAmount.subtract(oldAmount);
                 newBudget.addToSpent(difference);
-                // Count stays the same, no need to increment again
+                // Count stays the same
             } else {
                 // Different budget or type changed to expense
                 newBudget.addToSpent(newAmount);
                 newBudget.incrementTransactionCount();
             }
             budgetRepository.save(newBudget);
+        }
+    }
+
+    /**
+     * Helper method to update saving pot calculations when transaction changes
+     */
+    private void updateSavingPotCalculations(
+            SavingPot oldPot, BigDecimal oldAmount, TransactionType oldType,
+            SavingPot newPot, BigDecimal newAmount, TransactionType newType) {
+
+        // Remove from old pot
+        if (oldPot != null) {
+            if (oldType == TransactionType.SAVING) {
+                oldPot.subtractFromSaved(oldAmount);
+            } else if (oldType == TransactionType.WITHDRAW) {
+                oldPot.addToSaved(oldAmount);  // Add back what was withdrawn
+            }
+            oldPot.decrementTransactionCount();
+            savingPotRepository.save(oldPot);
+        }
+
+        // Add to new pot
+        if (newPot != null) {
+            // Check if it's the same pot (just updating amount)
+            if (oldPot != null && oldPot.getId().equals(newPot.getId()) && oldType == newType) {
+                // Same pot, same type - just update the difference
+                BigDecimal difference = newAmount.subtract(oldAmount);
+                if (newType == TransactionType.SAVING) {
+                    newPot.addToSaved(difference);
+                } else if (newType == TransactionType.WITHDRAW) {
+                    newPot.subtractFromSaved(difference);
+                }
+                // Count stays the same
+            } else {
+                // Different pot or type changed
+                if (newType == TransactionType.SAVING) {
+                    newPot.addToSaved(newAmount);
+                } else if (newType == TransactionType.WITHDRAW) {
+                    newPot.subtractFromSaved(newAmount);
+                }
+                newPot.incrementTransactionCount();
+            }
+            savingPotRepository.save(newPot);
         }
     }
 }

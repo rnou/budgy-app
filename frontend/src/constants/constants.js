@@ -14,6 +14,8 @@ import {
   Heart,
   GraduationCap,
   Smile,
+  ArrowUpCircle,
+  ArrowDownCircle,
 } from "lucide-react";
 
 // Icon mapping - defined once, reused everywhere
@@ -33,10 +35,11 @@ export const ICON_MAP = {
   Heart,
   GraduationCap,
   Smile,
+  ArrowUpCircle,
+  ArrowDownCircle,
 };
 
 // ==================== STANDARDIZED CATEGORIES ====================
-// Used for BOTH Transactions and Budgets
 export const CATEGORIES = [
   { value: "Entertainment", label: "Entertainment", icon: "Tv" },
   { value: "Bills", label: "Bills", icon: "Home" },
@@ -50,19 +53,16 @@ export const CATEGORIES = [
   { value: "General", label: "General", icon: "PiggyBank" },
 ];
 
-// Helper to get category by value
 export const getCategoryByValue = (value) => {
   return CATEGORIES.find(cat => cat.value === value) || CATEGORIES[CATEGORIES.length - 1];
 };
 
-// Helper to get icon component by category
 export const getCategoryIcon = (categoryValue) => {
   const category = getCategoryByValue(categoryValue);
   return ICON_MAP[category.icon];
 };
 
-// ==================== LEGACY - For backwards compatibility ====================
-// Keep old transaction categories for any existing code
+// ==================== LEGACY ====================
 export const TRANSACTION_CATEGORIES = [
   { value: "restaurant", label: "Restaurant", icon: "Utensils" },
   { value: "groceries", label: "Groceries", icon: "ShoppingCart" },
@@ -76,7 +76,6 @@ export const TRANSACTION_CATEGORIES = [
 ];
 
 // ==================== COLOR OPTIONS ====================
-// Theme colors matching your backend Budget colors
 export const THEME_COLORS = [
   { value: "#277C78", label: "Teal", class: "bg-[#277C78]" },
   { value: "#82C9D7", label: "Cyan", class: "bg-[#82C9D7]" },
@@ -88,7 +87,6 @@ export const THEME_COLORS = [
   { value: "#BE6C49", label: "Orange", class: "bg-[#BE6C49]" },
 ];
 
-// Legacy color options
 export const COLOR_OPTIONS = [
   { value: "bg-blue-500", label: "Blue" },
   { value: "bg-green-500", label: "Green" },
@@ -104,6 +102,8 @@ export const COLOR_OPTIONS = [
 export const TRANSACTION_TYPES = {
   INCOME: "income",
   EXPENSE: "expense",
+  SAVING: "saving",
+  WITHDRAW: "withdraw",
 };
 
 // ==================== FILTER TYPES ====================
@@ -111,6 +111,8 @@ export const FILTER_TYPES = {
   ALL: "all",
   INCOME: "income",
   EXPENSE: "expense",
+  SAVING: "saving",
+  WITHDRAW: "withdraw",
 };
 
 // ==================== DATE FORMAT OPTIONS ====================

@@ -14,6 +14,7 @@ public class SavingPotMapper {
                 .name(savingPot.getName())
                 .saved(savingPot.getSaved())
                 .goal(savingPot.getGoal())
+                .transactionCount(savingPot.getTransactionCount())
                 .icon(savingPot.getIcon())
                 .color(savingPot.getColor())
                 .createdAt(savingPot.getCreatedAt())

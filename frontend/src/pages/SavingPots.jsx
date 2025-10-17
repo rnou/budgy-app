@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useFinance } from '../contexts/FinanceContext';
-import { Plus, Edit2, Trash2, PiggyBank, TrendingUp, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, PiggyBank, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 
 const SavingPots = () => {
     const {
@@ -16,7 +16,7 @@ const SavingPots = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingPot, setEditingPot] = useState(null);
     const [selectedPot, setSelectedPot] = useState(null);
-    const [actionType, setActionType] = useState(null); // 'save' or 'withdraw'
+    const [actionType, setActionType] = useState(null); // 'saving' or 'withdraw'
     const [formData, setFormData] = useState({
         name: '',
         goal: '',
@@ -36,8 +36,9 @@ const SavingPots = () => {
         return savingsPots.map(pot => {
             if (!pot) return null;
 
-            const saved = pot.saved || 0;
-            const goal = pot.goal || 1; // Avoid division by zero
+            const saved = Number(pot.saved) || 0;
+            const goal = Number(pot.goal) || 1;
+            const transactionCount = Number(pot.transactionCount) || 0; // ✨ FROM BACKEND
             const percentage = (saved / goal) * 100;
             const remaining = goal - saved;
 
@@ -45,6 +46,7 @@ const SavingPots = () => {
                 ...pot,
                 saved,
                 goal,
+                transactionCount,
                 color: pot.color || '#277C78',
                 percentage: Math.min(percentage, 100),
                 remaining: Math.max(remaining, 0),
@@ -56,7 +58,10 @@ const SavingPots = () => {
     // Get transactions for selected pot
     const selectedPotTransactions = useMemo(() => {
         if (!selectedPot || !Array.isArray(transactions)) return [];
-        return transactions.filter(t => t && t.savingPotId === selectedPot.id);
+        return transactions.filter(t =>
+            t && t.savingPotId === selectedPot.id &&
+            (t.type === 'SAVING' || t.type === 'WITHDRAW')
+        );
     }, [selectedPot, transactions]);
 
     const handleOpenModal = (pot = null) => {
@@ -91,10 +96,7 @@ const SavingPots = () => {
             };
 
             if (editingPot) {
-                await updateSavingPot(editingPot.id, {
-                    ...editingPot,
-                    ...potData
-                });
+                await updateSavingPot(editingPot.id, potData);
             } else {
                 await addSavingPot({
                     ...potData,
@@ -137,33 +139,31 @@ const SavingPots = () => {
             return;
         }
 
+        // Check if withdrawal exceeds saved amount
+        if (actionType === 'withdraw' && amount > selectedPot.saved) {
+            alert(`Cannot withdraw ${amount}. Only ${selectedPot.saved.toFixed(2)} available.`);
+            return;
+        }
+
         try {
-            // Create transaction
+            // Create Transaction
             await addTransaction({
-                name: `${actionType === 'save' ? 'Deposit to' : 'Withdrawal from'} ${selectedPot.name}`,
-                amount: amount,
+                name: `${actionType === 'saving' ? 'Deposit to' : 'Withdrawal from'} ${selectedPot.name}`,
+                amount: amount, // Always positive
                 category: 'Savings',
-                date: new Date().toISOString().split('T')[0],
-                type: actionType === 'save' ? 'expense' : 'income', // Expense when saving, income when withdrawing
-                recurring: false,
+                transactionDate: new Date().toISOString().split('T')[0],
+                type: actionType,
+                icon: actionType === 'saving' ? 'ArrowUpCircle' : 'ArrowDownCircle',
+                color: 'bg-green-500',
                 savingPotId: selectedPot.id
-            });
-
-            // Update pot saved amount
-            const newSaved = actionType === 'save'
-                ? selectedPot.saved + amount
-                : Math.max(0, selectedPot.saved - amount);
-
-            await updateSavingPot(selectedPot.id, {
-                ...selectedPot,
-                saved: newSaved
             });
 
             setActionType(null);
             setActionAmount('');
+            setSelectedPot(null);
         } catch (error) {
             console.error('Error processing action:', error);
-            alert('Failed to process transaction');
+            alert(error.message || 'Failed to process transaction');
         }
     };
 
@@ -176,7 +176,7 @@ const SavingPots = () => {
     }
 
     return (
-        <div className="p-4 md:p-8 space-y-6">
+        <div className="p-4 md:p-8 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
@@ -251,21 +251,21 @@ const SavingPots = () => {
                                 <span className="text-sm text-gray-500 dark:text-gray-400">Goal</span>
                             </div>
                             <div className="flex justify-between items-baseline">
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                  ${pot.saved.toFixed(2)}
-                </span>
+                                <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                                    ${pot.saved.toFixed(2)}
+                                </span>
                                 <span className="text-lg font-semibold text-gray-600 dark:text-gray-400">
-                  ${pot.goal.toFixed(2)}
-                </span>
+                                    ${pot.goal.toFixed(2)}
+                                </span>
                             </div>
                         </div>
 
                         {/* Progress Bar */}
                         <div className="mb-4">
                             <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-600 dark:text-gray-300">
-                  {pot.percentage.toFixed(0)}% Complete
-                </span>
+                                <span className="text-gray-600 dark:text-gray-300">
+                                    {pot.percentage.toFixed(0)}% Complete
+                                </span>
                                 {pot.isComplete && (
                                     <span className="text-green-600 font-semibold">✓ Goal Reached!</span>
                                 )}
@@ -288,7 +288,7 @@ const SavingPots = () => {
                         {/* Action Buttons */}
                         <div className="flex gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
                             <button
-                                onClick={() => handleAction(pot, 'save')}
+                                onClick={() => handleAction(pot, 'saving')}
                                 className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-sm"
                             >
                                 <ArrowUpCircle className="w-4 h-4" />
@@ -304,13 +304,15 @@ const SavingPots = () => {
                             </button>
                         </div>
 
-                        {/* View Details */}
-                        <button
-                            onClick={() => setSelectedPot(pot)}
-                            className="w-full mt-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-                        >
-                            View Transactions →
-                        </button>
+                        {/* View Details & Transaction Count */}
+                        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <button
+                                onClick={() => setSelectedPot(pot)}
+                                className="w-full text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-left"
+                            >
+                                View {pot.transactionCount} transaction{pot.transactionCount !== 1 ? 's' : ''} →
+                            </button>
+                        </div>
                     </div>
                 ))}
 
@@ -405,12 +407,12 @@ const SavingPots = () => {
                 </div>
             )}
 
-            {/* Action Modal (Save/Withdraw) */}
+            {/* Action Modal (Add Money/Withdraw) */}
             {actionType && selectedPot && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full">
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                            {actionType === 'save' ? 'Add Money' : 'Withdraw Money'}
+                            {actionType === 'saving' ? 'Add Money' : 'Withdraw Money'}
                         </h2>
 
                         <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -456,12 +458,12 @@ const SavingPots = () => {
                                 <button
                                     type="submit"
                                     className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
-                                        actionType === 'save'
+                                        actionType === 'saving'
                                             ? 'bg-green-600 text-white hover:bg-green-700'
                                             : 'bg-red-600 text-white hover:bg-red-700'
                                     }`}
                                 >
-                                    Confirm {actionType === 'save' ? 'Deposit' : 'Withdrawal'}
+                                    Confirm {actionType === 'saving' ? 'Deposit' : 'Withdrawal'}
                                 </button>
                             </div>
                         </form>
@@ -525,7 +527,7 @@ const SavingPots = () => {
                                             className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                                         >
                                             <div className="flex items-center gap-3">
-                                                {transaction.type === 'expense' ? (
+                                                {transaction.type === 'SAVING' ? (
                                                     <ArrowUpCircle className="w-5 h-5 text-green-600" />
                                                 ) : (
                                                     <ArrowDownCircle className="w-5 h-5 text-red-600" />
@@ -535,15 +537,15 @@ const SavingPots = () => {
                                                         {transaction.name}
                                                     </p>
                                                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                        {new Date(transaction.date).toLocaleDateString()}
+                                                        {new Date(transaction.transactionDate).toLocaleDateString()}
                                                     </p>
                                                 </div>
                                             </div>
                                             <span className={`font-semibold ${
-                                                transaction.type === 'expense' ? 'text-green-600' : 'text-red-600'
+                                                transaction.type === 'SAVING' ? 'text-green-600' : 'text-red-600'
                                             }`}>
-                        {transaction.type === 'expense' ? '+' : '-'}${transaction.amount.toFixed(2)}
-                      </span>
+                                                {transaction.type === 'SAVING' ? '+' : '-'}${Math.abs(transaction.amount).toFixed(2)}
+                                            </span>
                                         </div>
                                     ))
                                 ) : (
