@@ -23,7 +23,7 @@ const Budgets = () => {
         color: '#277C78'
     });
 
-    // Calculate budget stats - NOW USES BACKEND VALUES!
+    // Calculate budget stats
     const budgetStats = useMemo(() => {
         if (!Array.isArray(budgets)) {
             return [];
@@ -37,7 +37,6 @@ const Budgets = () => {
                     const spent = Number(budget.spent) || 0;
                     const limitAmount = Number(budget.limitAmount) || 0;
                     const transactionCount = Number(budget.transactionCount) || 0;
-
                     const remaining = limitAmount - spent;
                     const percentage = limitAmount > 0 ? (spent / limitAmount) * 100 : 0;
 

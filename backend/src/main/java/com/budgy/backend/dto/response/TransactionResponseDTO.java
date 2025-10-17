@@ -25,4 +25,5 @@ public class TransactionResponseDTO {
     private Long budgetId;
     private Long savingPotId;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

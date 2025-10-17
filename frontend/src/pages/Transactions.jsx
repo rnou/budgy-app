@@ -56,9 +56,12 @@ export const Transactions = () => {
           .toLowerCase()
           .includes(filters.searchTerm.toLowerCase());
 
+      const transactionType = transaction.type?.toUpperCase();
+      const filterType = filters.filterType.toUpperCase();
+
       const matchesType =
           filters.filterType === FILTER_TYPES.ALL ||
-          transaction.type === filters.filterType;
+          transactionType === filterType;
 
       return matchesSearch && matchesType;
     });
@@ -111,7 +114,7 @@ export const Transactions = () => {
       name: transaction.name || "",
       amount: Math.abs(Number(transaction.amount) || 0).toString(),
       category: transaction.category || "other",
-      type: transaction.type || "expense",
+      type: transaction.type?.toLowerCase() || "expense", // ✨ FIX: Convert to lowercase for form
       icon: transaction.icon || "ShoppingBag",
       color: transaction.color || "bg-blue-500",
       budgetId: transaction.budgetId || null,
@@ -196,7 +199,8 @@ export const Transactions = () => {
       (transaction) => {
         if (!transaction) return null;
 
-        const { id, icon, color, name, category, date, amount, budgetId, savingPotId } = transaction;
+        // ✨ FIX: Use transactionDate instead of date
+        const { id, icon, color, name, category, transactionDate, amount, budgetId, savingPotId } = transaction;
         const Icon = ICON_MAP[icon] || ShoppingBag;
         const isPositive = Number(amount) > 0;
 
@@ -218,29 +222,31 @@ export const Transactions = () => {
                       {name || "Unknown"}
                     </h3>
                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                      <span className="capitalize">{category || "other"} • {formatDate(date)}</span>
+                      <span className="capitalize">
+                        {category || "other"} • {formatDate(transactionDate)}
+                      </span>
                       {linkedBudget && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded text-xs">
-                          <Link2 size={12} />
+                            <Link2 size={12} />
                             {linkedBudget.category}
-                        </span>
+                          </span>
                       )}
                       {linkedPot && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded text-xs">
-                          <Link2 size={12} />
+                            <Link2 size={12} />
                             {linkedPot.name}
-                        </span>
+                          </span>
                       )}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-4 flex-shrink-0">
-              <span
-                  className={`text-lg font-bold ${isPositive ? "text-green-600" : "text-gray-900 dark:text-white"}`}
-              >
-                {isPositive ? "+" : ""}${formatAmount(amount)}
-              </span>
+                  <span
+                      className={`text-lg font-bold ${isPositive ? "text-green-600" : "text-gray-900 dark:text-white"}`}
+                  >
+                    {isPositive ? "+" : ""}${formatAmount(amount)}
+                  </span>
 
                   <div className="flex items-center space-x-2">
                     <button
@@ -298,7 +304,7 @@ export const Transactions = () => {
           </div>
           <button
               onClick={openAddModal}
-              className="mt-4 sm:mt-0 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
           >
             <Plus size={20} />
             <span>Add Transaction</span>
@@ -376,7 +382,7 @@ export const Transactions = () => {
   );
 };
 
-// Modal Component with Budget/Pot Linking
+// Modal Component
 const TransactionModal = ({
                             isOpen,
                             isEditing,
@@ -533,7 +539,7 @@ const TransactionModal = ({
                           <option value="">No budget</option>
                           {availableBudgets.map((budget) => (
                               <option key={budget.id} value={budget.id}>
-                                {budget.category} (${budget.maximum})
+                                {budget.category} (${budget.limitAmount})
                               </option>
                           ))}
                         </select>
@@ -592,7 +598,7 @@ const TransactionModal = ({
                 </button>
                 <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex-1 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
                 >
                   {isEditing ? "Update" : "Add"} Transaction
                 </button>

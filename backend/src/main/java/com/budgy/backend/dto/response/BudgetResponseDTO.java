@@ -17,6 +17,7 @@ public class BudgetResponseDTO {
     private String category;
     private BigDecimal spent;
     private BigDecimal limitAmount;
+    private Integer transactionCount;
     private String color;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

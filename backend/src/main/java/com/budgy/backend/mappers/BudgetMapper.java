@@ -14,6 +14,7 @@ public class BudgetMapper {
                 .category(budget.getCategory())
                 .spent(budget.getSpent())
                 .limitAmount(budget.getLimitAmount())
+                .transactionCount(budget.getTransactionCount())
                 .color(budget.getColor())
                 .createdAt(budget.getCreatedAt())
                 .updatedAt(budget.getUpdatedAt())
