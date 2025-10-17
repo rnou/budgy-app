@@ -449,6 +449,7 @@ const SavingPots = () => {
                                     onClick={() => {
                                         setActionType(null);
                                         setActionAmount('');
+                                        setSelectedPot(null);
                                     }}
                                     className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                                 >
