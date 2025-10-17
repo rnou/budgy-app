@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useFinance } from '../contexts/FinanceContext';
 import { Plus, Edit2, Trash2, DollarSign } from 'lucide-react';
+import { CATEGORIES, THEME_COLORS } from '../constants/constants';
 
 const Budgets = () => {
     const context = useFinance();
@@ -8,7 +9,6 @@ const Budgets = () => {
     // Safely extract values with defaults
     const budgets = context?.budgets || [];
     const transactions = context?.transactions || [];
-
     const loading = context?.loading || false;
     const addBudget = context?.addBudget;
     const updateBudget = context?.updateBudget;
@@ -23,21 +23,9 @@ const Budgets = () => {
         color: '#277C78'
     });
 
-    // Budget categories with icons
-    const categories = [
-        'Entertainment', 'Bills', 'Groceries', 'Dining Out',
-        'Transportation', 'Personal Care', 'Education', 'Lifestyle',
-        'Shopping', 'General'
-    ];
-
-    const themeColors = [
-        '#277C78', '#82C9D7', '#F2CDAC', '#626070',
-        '#C94736', '#826CB0', '#597C7C', '#BE6C49'
-    ];
-
-    // Calculate budget spent and remaining
+    // Calculate budget stats - NOW USES BACKEND VALUES!
     const budgetStats = useMemo(() => {
-        if (!Array.isArray(budgets) || !Array.isArray(transactions)) {
+        if (!Array.isArray(budgets)) {
             return [];
         }
 
@@ -45,16 +33,11 @@ const Budgets = () => {
             .filter(budget => budget != null)
             .map(budget => {
                 try {
-                    const budgetTransactions = transactions.filter(
-                        t => t != null && t.budgetId === budget.id && t.type === 'expense'
-                    );
-
-                    const spent = budgetTransactions.reduce((sum, t) => {
-                        const amount = Math.abs(Number(t.amount) || 0);
-                        return sum + amount;
-                    }, 0);
-
+                    // Use backend values directly
+                    const spent = Number(budget.spent) || 0;
                     const limitAmount = Number(budget.limitAmount) || 0;
+                    const transactionCount = Number(budget.transactionCount) || 0;
+
                     const remaining = limitAmount - spent;
                     const percentage = limitAmount > 0 ? (spent / limitAmount) * 100 : 0;
 
@@ -66,7 +49,7 @@ const Budgets = () => {
                         spent: spent,
                         remaining: remaining,
                         percentage: Math.min(Math.max(percentage, 0), 100),
-                        transactionCount: budgetTransactions.length,
+                        transactionCount: transactionCount,
                         status: percentage >= 100 ? 'exceeded' : percentage >= 80 ? 'warning' : 'good'
                     };
                 } catch (error) {
@@ -75,7 +58,7 @@ const Budgets = () => {
                 }
             })
             .filter(stat => stat != null);
-    }, [budgets, transactions]);
+    }, [budgets]);
 
     // Get transactions for selected budget
     const selectedBudgetTransactions = useMemo(() => {
@@ -122,10 +105,7 @@ const Budgets = () => {
             };
 
             if (editingBudget) {
-                await updateBudget(editingBudget.id, {
-                    ...editingBudget,
-                    ...budgetData
-                });
+                await updateBudget(editingBudget.id, budgetData);
             } else {
                 await addBudget(budgetData);
             }
@@ -270,16 +250,16 @@ const Budgets = () => {
                             <span className={`font-semibold ${
                                 budget.remaining < 0 ? 'text-red-600' : 'text-gray-900 dark:text-white'
                             }`}>
-                ${formatCurrency(Math.abs(budget.remaining))}
+                                ${formatCurrency(Math.abs(budget.remaining))}
                                 {budget.remaining < 0 && ' over'}
-              </span>
+                            </span>
                         </div>
 
                         {/* Transaction Count */}
                         <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {budget.transactionCount} transaction{budget.transactionCount !== 1 ? 's' : ''}
-              </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {budget.transactionCount} transaction{budget.transactionCount !== 1 ? 's' : ''}
+                            </span>
                         </div>
                     </div>
                 ))}
@@ -318,8 +298,8 @@ const Budgets = () => {
                                     required
                                 >
                                     <option value="">Select category</option>
-                                    {categories.map((cat) => (
-                                        <option key={cat} value={cat}>{cat}</option>
+                                    {CATEGORIES.map((cat) => (
+                                        <option key={cat.value} value={cat.value}>{cat.label}</option>
                                     ))}
                                 </select>
                             </div>
@@ -344,15 +324,16 @@ const Budgets = () => {
                                     Theme Color
                                 </label>
                                 <div className="flex gap-2 flex-wrap">
-                                    {themeColors.map((color) => (
+                                    {THEME_COLORS.map((colorOption) => (
                                         <button
-                                            key={color}
+                                            key={colorOption.value}
                                             type="button"
-                                            onClick={() => setFormData({ ...formData, color: color })}
+                                            onClick={() => setFormData({ ...formData, color: colorOption.value })}
                                             className={`w-10 h-10 rounded-lg transition-transform ${
-                                                formData.color === color ? 'ring-2 ring-gray-900 dark:ring-white scale-110' : ''
+                                                formData.color === colorOption.value ? 'ring-2 ring-gray-900 dark:ring-white scale-110' : ''
                                             }`}
-                                            style={{ backgroundColor: color }}
+                                            style={{ backgroundColor: colorOption.value }}
+                                            title={colorOption.label}
                                         />
                                     ))}
                                 </div>
@@ -440,12 +421,12 @@ const Budgets = () => {
                                                     {transaction.name || 'Unknown'}
                                                 </p>
                                                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                    {transaction.date ? new Date(transaction.date).toLocaleDateString() : 'No date'}
+                                                    {transaction.transactionDate ? new Date(transaction.transactionDate).toLocaleDateString() : 'No date'}
                                                 </p>
                                             </div>
                                             <span className="font-semibold text-red-600">
-                        -${formatCurrency(Math.abs(transaction.amount))}
-                      </span>
+                                                -${formatCurrency(Math.abs(transaction.amount))}
+                                            </span>
                                         </div>
                                     ))
                                 ) : (

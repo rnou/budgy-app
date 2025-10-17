@@ -39,6 +39,9 @@ public class Budget {
     @Column(name = "limit_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal limitAmount;
 
+    @Column(name = "transaction_count", nullable = false)
+    private Integer transactionCount = 0;
+
     private String color;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -56,4 +59,34 @@ public class Budget {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    public void incrementTransactionCount() {
+        this.transactionCount++;
+    }
+
+    public void decrementTransactionCount() {
+        if (this.transactionCount > 0) {
+            this.transactionCount--;
+        }
+    }
+
+    public void addToSpent(BigDecimal amount) {
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) != 0) {
+            // Use absolute value for expenses (they might be stored as negative)
+            BigDecimal absoluteAmount = amount.abs();
+            this.spent = this.spent.add(absoluteAmount);
+        }
+    }
+
+    public void subtractFromSpent(BigDecimal amount) {
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) != 0) {
+            // Use absolute value
+            BigDecimal absoluteAmount = amount.abs();
+            this.spent = this.spent.subtract(absoluteAmount);
+
+            // Prevent negative spent
+            if (this.spent.compareTo(BigDecimal.ZERO) < 0) {
+                this.spent = BigDecimal.ZERO;
+            }
+        }
+    }
 }
