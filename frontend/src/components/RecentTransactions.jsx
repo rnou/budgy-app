@@ -37,7 +37,7 @@ export const RecentTransactions = () => {
       icon = "ShoppingBag",
       color = "bg-gray-500",
       name = "Unknown",
-      date,
+      transactionDate,
       amount = 0,
     } = transaction;
 
@@ -56,7 +56,7 @@ export const RecentTransactions = () => {
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-medium text-gray-900 dark:text-white truncate">{name}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(date)}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(transactionDate)}</p>
           </div>
           <div className="text-right flex-shrink-0">
             <p

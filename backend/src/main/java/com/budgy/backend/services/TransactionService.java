@@ -80,12 +80,19 @@ public class TransactionService {
         Transaction transaction = TransactionMapper.toEntity(dto, user, budget, savingPot);
         Transaction savedTransaction = transactionRepository.save(transaction);
 
+        // ==================== UPDATE USER BALANCE ====================
+        updateUserBalanceOnCreate(user, savedTransaction);
+        userRepository.save(user);
+        // =================================================================
+
+        // UPDATE BUDGET if expense
         if (budget != null && transaction.getType() == TransactionType.EXPENSE) {
             budget.addToSpent(transaction.getAmount());
             budget.incrementTransactionCount();
             budgetRepository.save(budget);
         }
 
+        // UPDATE SAVING POT if saving/withdraw
         if (savingPot != null) {
             if (transaction.getType() == TransactionType.SAVING) {
                 savingPot.addToSaved(transaction.getAmount());
@@ -108,6 +115,8 @@ public class TransactionService {
         // Check for invalid combinations
         validateTransactionType(dto);
 
+        User user = transaction.getUser();
+
         // Store old values for recalculation
         Budget oldBudget = transaction.getBudget();
         SavingPot oldSavingPot = transaction.getSavingPot();
@@ -126,6 +135,19 @@ public class TransactionService {
                     .orElseThrow(() -> new ResourceNotFoundException("SavingPot", "id", dto.getSavingPotId()));
         }
 
+        // ==================== UPDATE USER BALANCE ====================
+        // Update balance BEFORE changing the transaction entity
+        TransactionType newType = TransactionType.valueOf(dto.getType().toUpperCase());
+        BigDecimal newAmount = dto.getAmount();
+
+        // For expenses, make sure amount is negative
+        if (newType == TransactionType.EXPENSE && newAmount.compareTo(BigDecimal.ZERO) > 0) {
+            newAmount = newAmount.negate();
+        }
+
+        updateUserBalanceOnUpdate(user, oldAmount, oldType, newAmount, newType);
+        // =================================================================
+
         TransactionMapper.updateEntity(transaction, dto, budget, savingPot);
 
         // RECALCULATE BUDGETS
@@ -136,12 +158,23 @@ public class TransactionService {
 
         Transaction updatedTransaction = transactionRepository.save(transaction);
 
+        // ==================== SAVE USER ====================
+        userRepository.save(user);
+        // =======================================================
+
         return TransactionMapper.toResponse(updatedTransaction);
     }
 
     public void deleteTransaction(Long id) {
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction", "id", id));
+
+        User user = transaction.getUser();
+
+        // ==================== UPDATE USER BALANCE ====================
+        updateUserBalanceOnDelete(user, transaction);
+        userRepository.save(user);
+        // =================================================================
 
         // UPDATE BUDGET before deleting
         if (transaction.getBudget() != null && transaction.getType() == TransactionType.EXPENSE) {
@@ -197,7 +230,106 @@ public class TransactionService {
         }
     }
 
-    // ==================== HELPER METHODS ====================
+    // ==================== USER BALANCE METHODS ====================
+
+    /**
+     * Update user balance when creating a new transaction
+     *
+     * Transaction Type Impact on Balance:
+     * - INCOME: Increases balance (amount is positive)
+     * - EXPENSE: Decreases balance (amount is negative, stored as negative)
+     * - SAVING: Decreases balance (moving money to pot)
+     * - WITHDRAW: Increases balance (getting money from pot)
+     */
+    private void updateUserBalanceOnCreate(User user, Transaction transaction) {
+        BigDecimal amount = transaction.getAmount();
+        TransactionType type = transaction.getType();
+
+        switch (type) {
+            case INCOME:
+                // Income increases balance
+                user.addToBalance(amount);
+                break;
+            case EXPENSE:
+                // Expense decreases balance
+                user.subtractFromBalance(amount);
+                break;
+            case SAVING:
+                // Saving decreases balance (moving money to saving pot)
+                user.subtractFromBalance(amount);
+                break;
+            case WITHDRAW:
+                // Withdraw increases balance (getting money from saving pot)
+                user.addToBalance(amount);
+                break;
+        }
+    }
+
+    /**
+     * Update user balance when updating a transaction
+     * First revert the old transaction, then apply the new one
+     */
+    private void updateUserBalanceOnUpdate(User user, BigDecimal oldAmount, TransactionType oldType,
+                                           BigDecimal newAmount, TransactionType newType) {
+        // Revert old transaction impact
+        switch (oldType) {
+            case INCOME:
+                user.subtractFromBalance(oldAmount);
+                break;
+            case EXPENSE:
+                user.addToBalance(oldAmount);
+                break;
+            case SAVING:
+                user.addToBalance(oldAmount);
+                break;
+            case WITHDRAW:
+                user.subtractFromBalance(oldAmount);
+                break;
+        }
+
+        // Apply new transaction impact
+        switch (newType) {
+            case INCOME:
+                user.addToBalance(newAmount);
+                break;
+            case EXPENSE:
+                user.subtractFromBalance(newAmount);
+                break;
+            case SAVING:
+                user.subtractFromBalance(newAmount);
+                break;
+            case WITHDRAW:
+                user.addToBalance(newAmount);
+                break;
+        }
+    }
+
+    /**
+     * Update user balance when deleting a transaction
+     * Revert the transaction's impact on balance
+     */
+    private void updateUserBalanceOnDelete(User user, Transaction transaction) {
+        BigDecimal amount = transaction.getAmount();
+        TransactionType type = transaction.getType();
+
+        // Revert the transaction impact
+        switch (type) {
+            case INCOME:
+                user.subtractFromBalance(amount);
+                break;
+            case EXPENSE:
+                user.addToBalance(amount);
+                break;
+            case SAVING:
+                user.addToBalance(amount);
+                break;
+            case WITHDRAW:
+                user.subtractFromBalance(amount);
+                break;
+        }
+    }
+
+    // ==================== BUDGET/POT METHODS ====================
 
     /**
      * Helper method to update budget calculations when transaction changes

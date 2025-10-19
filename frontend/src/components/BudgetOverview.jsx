@@ -1,14 +1,17 @@
+import { useNavigate } from "react-router-dom";
 import React from "react";
 import { MoreHorizontal } from "lucide-react";
 import { useFinance } from "../contexts/FinanceContext";
 
 export const BudgetOverview = () => {
   const { budgets = [], loading } = useFinance();
+  const navigate = useNavigate();
+  const handleShowMore = () => navigate("/budgets");
 
-  const calculatePercentage = (spent, limit) => {
+  const calculatePercentage = (spent, limitAmount) => {
     const spentNum = Number(spent) || 0;
-    const limitNum = Number(limit) || 1;
-    return Math.min((spentNum / limitNum) * 100, 100);
+    const limitNum = Number(limitAmount) || 1;
+    return (spentNum / limitNum) * 100;
   };
 
   const formatCurrency = (amount) => {
@@ -16,54 +19,53 @@ export const BudgetOverview = () => {
     return isNaN(num) ? "0" : num.toFixed(0);
   };
 
-  const renderBudgetItem = (item) => {
-    if (!item) return null;
+    const renderBudgetItem = (item) => {
+        if (!item) return null;
 
-    const {
-      id,
-      category = "Unknown",
-      spent = 0,
-      limit = 0,
-      color = "bg-blue-500",
-    } = item;
+        const {
+            id,
+            category = "Unknown",
+            spent = 0,
+            limitAmount = 0,
+            color = "bg-blue-500",
+        } = item;
 
-    const percentage = calculatePercentage(spent, limit);
-    const isOverBudget = percentage >= 100;
+        const percentage = calculatePercentage(spent, limitAmount);
+        const isOverBudget = percentage >= 100;
 
-    return (
-        <div key={id} className="space-y-2">
-          <div className="flex items-center justify-between">
-          <span className="font-medium text-gray-700 dark:text-gray-300 capitalize">
-            {category}
-          </span>
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
-            ${formatCurrency(spent)} / ${formatCurrency(limit)}
-          </span>
-          </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-            <div
-                className={`h-2 rounded-full transition-all duration-300 ${
-                    isOverBudget ? "bg-red-500" : color
-                }`}
-                style={{ width: `${percentage}%` }}
-                role="progressbar"
-                aria-valuenow={percentage}
-                aria-valuemin="0"
-                aria-valuemax="100"
-            />
-          </div>
-          <div className="flex justify-end">
-          <span
-              className={`text-xs font-medium ${
-                  isOverBudget ? "text-red-500" : "text-gray-500 dark:text-gray-400"
-              }`}
-          >
-            {percentage.toFixed(0)}%{isOverBudget && " (Over budget)"}
-          </span>
-          </div>
-        </div>
-    );
-  };
+        const visualPercentage = Math.min(percentage, 100);
+
+        return (
+            <div key={id} className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-700 dark:text-gray-300 capitalize">
+                      {category}
+                    </span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      ${formatCurrency(spent)} / ${formatCurrency(limitAmount)}
+                    </span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                    <div
+                        className="h-2 rounded-full transition-all duration-300"
+                        style={{
+                            width: `${visualPercentage}%`,
+                            backgroundColor: isOverBudget ? '#EF4444' : color
+                        }}
+                    />
+                </div>
+                <div className="flex justify-end">
+                    <span
+                        className={`text-xs font-medium ${
+                            isOverBudget ? "text-red-500" : "text-gray-500 dark:text-gray-400"
+                        }`}
+                    >
+                      {percentage.toFixed(0)}%{isOverBudget && " (Over budget)"}
+                    </span>
+                </div>
+            </div>
+        );
+    };
 
   if (loading) {
     return (
@@ -95,6 +97,7 @@ export const BudgetOverview = () => {
           <button
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               aria-label="More options"
+              onClick={handleShowMore}
           >
             <MoreHorizontal size={20} className="text-gray-500 dark:text-gray-400" />
           </button>
@@ -105,7 +108,9 @@ export const BudgetOverview = () => {
           ) : (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <p>No budgets set yet</p>
-                <button className="mt-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm">
+                <button
+                    className="mt-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm"
+                    onClick={handleShowMore}>
                   Create your first budget
                 </button>
               </div>
@@ -113,7 +118,9 @@ export const BudgetOverview = () => {
         </div>
         {displayBudgets.length > 0 && (
             <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
-              <button className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
+              <button
+                  className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                  onClick={handleShowMore}>
                 See Details →
               </button>
             </div>

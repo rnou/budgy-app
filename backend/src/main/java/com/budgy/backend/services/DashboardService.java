@@ -98,9 +98,14 @@ public class DashboardService {
         // Current balance from user entity
         BigDecimal currentBalance = user.getCurrentBalance();
 
-        // Calculate balance change (income - expenses this month)
-        BigDecimal balanceChange = currentIncome.subtract(currentExpenses);
-        Double balanceChangePercent = calculateBalanceChangePercent(currentBalance, balanceChange);
+        // Calculate previous month's balance
+        // Previous balance = Current balance - (current month income - current month expenses)
+        BigDecimal currentMonthNetChange = currentIncome.add(currentExpenses); // expenses are negative
+        BigDecimal previousBalance = currentBalance.subtract(currentMonthNetChange);
+
+        // Calculate balance change
+        BigDecimal balanceChange = currentBalance.subtract(previousBalance);
+        Double balanceChangePercent = calculatePercentageChange(previousBalance, currentBalance);
 
         // Format period for display
         String period = currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy"));
@@ -177,27 +182,7 @@ public class DashboardService {
 
         BigDecimal change = newValue.subtract(oldValue);
         BigDecimal percentChange = change
-                .divide(oldValue, 4, RoundingMode.HALF_UP)
-                .multiply(BigDecimal.valueOf(100));
-
-        return percentChange.doubleValue();
-    }
-
-    /**
-     * Calculate balance change percentage relative to current balance
-     * Used for the balance card percentage indicator
-     *
-     * @param currentBalance User's current balance
-     * @param change         Amount of change (income - expenses)
-     * @return Percentage change as double
-     */
-    private Double calculateBalanceChangePercent(BigDecimal currentBalance, BigDecimal change) {
-        if (currentBalance.compareTo(BigDecimal.ZERO) == 0) {
-            return 0.0;
-        }
-
-        BigDecimal percentChange = change
-                .divide(currentBalance, 4, RoundingMode.HALF_UP)
+                .divide(oldValue.abs(), 4, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
 
         return percentChange.doubleValue();

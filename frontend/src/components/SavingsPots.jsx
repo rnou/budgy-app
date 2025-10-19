@@ -1,10 +1,23 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { PiggyBank } from "lucide-react";
 import { useFinance } from "../contexts/FinanceContext";
 import { ICON_MAP } from "../constants/constants";
 
 export const SavingsPots = () => {
   const { savingsPots = [], totalSavings = 0, loading } = useFinance();
+  const navigate = useNavigate();
+
+  const handleManagePots = () => {
+    navigate("/savings");
+  };
+  const handlePotClick = (potId) => {
+    // Navigate to savings pots page (add pot detail view later)
+    navigate("/savings");
+  };
+  const handleCreatePot = () => {
+    navigate("/savings");
+  };
 
   const calculatePercentage = (saved, goal) => {
     const savedNum = Number(saved) || 0;
@@ -71,7 +84,10 @@ export const SavingsPots = () => {
               Total Saved: ${formatCurrency(totalSavings)}
             </p>
           </div>
-          <button className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
+          <button
+              onClick={handleManagePots}
+              className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+          >
             Manage Pots →
           </button>
         </div>
@@ -86,7 +102,7 @@ export const SavingsPots = () => {
                   saved = 0,
                   goal = 0,
                   icon = "PiggyBank",
-                  color = "bg-teal-500",
+                  color = "#14B8A6", // Default teal hex color
                 } = pot;
 
                 const Icon = ICON_MAP[icon] || PiggyBank;
@@ -96,11 +112,13 @@ export const SavingsPots = () => {
                 return (
                     <div
                         key={id}
+                        onClick={() => handlePotClick(id)}
                         className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center space-x-3 mb-3">
                         <div
-                            className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center flex-shrink-0`}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ backgroundColor: color }}
                         >
                           <Icon size={16} className="text-white" />
                         </div>
@@ -115,8 +133,11 @@ export const SavingsPots = () => {
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 mb-2 overflow-hidden">
                         <div
-                            className={`h-2 rounded-full ${color} transition-all duration-300`}
-                            style={{ width: `${percentage}%` }}
+                            className="h-2 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${percentage}%`,
+                              backgroundColor: color
+                            }}
                             role="progressbar"
                             aria-valuenow={percentage}
                             aria-valuemin="0"
@@ -136,7 +157,10 @@ export const SavingsPots = () => {
               <div className="col-span-2 text-center py-8 text-gray-500 dark:text-gray-400">
                 <PiggyBank size={48} className="mx-auto mb-2 text-gray-300 dark:text-gray-600" />
                 <p>No savings pots yet</p>
-                <button className="mt-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm">
+                <button
+                    onClick={handleCreatePot}
+                    className="mt-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm"
+                >
                   Create your first savings pot
                 </button>
               </div>

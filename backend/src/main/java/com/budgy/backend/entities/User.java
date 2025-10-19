@@ -85,4 +85,49 @@ public class User {
         }
         return (parts[0].charAt(0) + "" + parts[parts.length - 1].charAt(0)).toUpperCase();
     }
+
+    // ==================== BALANCE MANAGEMENT METHODS ====================
+
+    /**
+     * Add to current balance
+     * Used for INCOME and WITHDRAW transactions (positive amounts)
+     *
+     * @param amount Amount to add (use absolute value)
+     */
+    public void addToBalance(BigDecimal amount) {
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) != 0) {
+            BigDecimal absoluteAmount = amount.abs();
+            this.currentBalance = this.currentBalance.add(absoluteAmount);
+        }
+    }
+
+    /**
+     * Subtract from current balance
+     * Used for EXPENSE and SAVING transactions (negative amounts)
+     *
+     * @param amount Amount to subtract (use absolute value)
+     */
+    public void subtractFromBalance(BigDecimal amount) {
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) != 0) {
+            BigDecimal absoluteAmount = amount.abs();
+            this.currentBalance = this.currentBalance.subtract(absoluteAmount);
+        }
+    }
+
+    /**
+     * Update balance based on transaction type and amount
+     * This is the main method to use when creating/updating/deleting transactions
+     *
+     * @param amount Amount of the transaction
+     * @param isPositiveImpact true if this increases balance, false if it decreases
+     */
+    public void updateBalance(BigDecimal amount, boolean isPositiveImpact) {
+        if (amount == null) return;
+
+        if (isPositiveImpact) {
+            addToBalance(amount);
+        } else {
+            subtractFromBalance(amount);
+        }
+    }
 }

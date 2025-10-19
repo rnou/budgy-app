@@ -3,6 +3,13 @@ import { getDashboardStats } from "../services/apiService";
 import RecentTransactions from "../components/RecentTransactions";
 import BudgetOverview from "../components/BudgetOverview";
 import SavingsPots from "../components/SavingsPots";
+import StatsCard from "../components/StatsCard";
+import {
+  CreditCard,
+  TrendingUp,
+  TrendingDown,
+  Sparkles
+} from "lucide-react";
 
 const Overview = () => {
   const [stats, setStats] = useState(null);
@@ -44,205 +51,120 @@ const Overview = () => {
   };
 
   const formatPercentage = (percent) => {
-    if (!percent) return "0%";
+    if (percent === null || percent === undefined) return "0%";
     const sign = percent > 0 ? "+" : "";
     return `${sign}${percent.toFixed(1)}%`;
   };
 
-  const getPercentageColor = (percent) => {
-    if (!percent) return "text-gray-500";
-    return percent > 0 ? "text-green-500" : "text-red-500";
-  };
-
   if (loading) {
     return (
-      <div className="p-8">
-        <div className="animate-pulse space-y-8">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
+        <div className="p-8">
+          <div className="animate-pulse space-y-8">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          Error loading dashboard: {error}
+        <div className="p-8">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded">
+            Error loading dashboard: {error}
+          </div>
         </div>
-      </div>
     );
   }
 
   return (
-    <div className="p-8 space-y-8 min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Overview</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Track your financial health at a glance
-        </p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Current Balance */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-2">
-            <div className="bg-blue-500 p-3 rounded-lg">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                />
-              </svg>
-            </div>
-            <span
-              className={`text-sm font-semibold ${getPercentageColor(stats?.balanceChangePercent)}`}
-            >
-              {formatPercentage(stats?.balanceChangePercent)}
-            </span>
-          </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Current Balance</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {formatCurrency(stats?.currentBalance)}
-          </p>
-        </div>
-
-        {/* Income */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-2">
-            <div className="bg-green-500 p-3 rounded-lg">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                />
-              </svg>
-            </div>
-            <span
-              className={`text-sm font-semibold ${getPercentageColor(stats?.incomeChangePercent)}`}
-            >
-              {formatPercentage(stats?.incomeChangePercent)}
-            </span>
-          </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Income</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {formatCurrency(stats?.income)}
-          </p>
-        </div>
-
-        {/* Expenses */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-2">
-            <div className="bg-red-500 p-3 rounded-lg">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-                />
-              </svg>
-            </div>
-            <span
-              className={`text-sm font-semibold ${getPercentageColor(stats?.expenseChangePercent)}`}
-            >
-              {formatPercentage(stats?.expenseChangePercent)}
-            </span>
-          </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Expenses</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {formatCurrency(stats?.expenses)}
-          </p>
-        </div>
-
-        {/* Savings */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-2">
-            <div className="bg-purple-500 p-3 rounded-lg">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                />
-              </svg>
-            </div>
-            <span
-              className={`text-sm font-semibold ${getPercentageColor(stats?.savingsChangePercent)}`}
-            >
-              {formatPercentage(stats?.savingsChangePercent)}
-            </span>
-          </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Savings</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {formatCurrency(stats?.savings)}
-          </p>
-        </div>
-      </div>
-
-      {/* Period Info */}
-      {stats?.period && (
-        <div className="bg-blue-50 dark:bg-gray-800 border border-blue-200 dark:border-none rounded-lg p-4">
-          <p className="text-sm text-blue-700 dark:text-gray-400">
-            📊 Statistics for{" "}
-            <span className="font-semibold">{stats.period}</span>
-            {stats.transactionCount > 0 && (
-              <span> • {stats.transactionCount} transactions</span>
-            )}
-          </p>
-        </div>
-      )}
-
-      {/* Secondary Content Grid - Transactions and Budget */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Recent Transactions (2 columns) */}
-        <div className="lg:col-span-2">
-          <RecentTransactions />
-        </div>
-
-        {/* Right Column - Budget Overview (1 column) */}
+      <div className="p-8 space-y-8 min-h-screen bg-gray-50 dark:bg-gray-900">
+        {/* Header */}
         <div>
-          <BudgetOverview />
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Overview</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Track your financial health at a glance
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Current Balance */}
+          <StatsCard
+              title="Current Balance"
+              amount={formatCurrency(stats?.currentBalance)}
+              icon={CreditCard}
+              trend={stats?.balanceChangePercent > 0 ? "up" : "down"}
+              trendValue={formatPercentage(stats?.balanceChangePercent)}
+              color="blue"
+          />
+
+          {/* Income */}
+          <StatsCard
+              title="Income"
+              amount={formatCurrency(stats?.income)}
+              icon={TrendingUp}
+              trend={stats?.incomeChangePercent > 0 ? "up" : "down"}
+              trendValue={formatPercentage(stats?.incomeChangePercent)}
+              color="green"
+          />
+
+          {/* Expenses */}
+          <StatsCard
+              title="Expenses"
+              amount={formatCurrency(stats?.expenses)}
+              icon={TrendingDown}
+              trend={stats?.expenseChangePercent > 0 ? "up" : "down"}
+              trendValue={formatPercentage(stats?.expenseChangePercent)}
+              color="red"
+          />
+
+          {/* Savings */}
+          <StatsCard
+              title="Savings"
+              amount={formatCurrency(stats?.savings)}
+              icon={Sparkles}
+              trend={stats?.savingsChangePercent > 0 ? "up" : "down"}
+              trendValue={formatPercentage(stats?.savingsChangePercent)}
+              color="purple"
+          />
+        </div>
+
+        {/* Period Info */}
+        {stats?.period && (
+            <div className="bg-blue-50 dark:bg-gray-800 border border-blue-200 dark:border-gray-700 rounded-lg p-4">
+              <p className="text-sm text-blue-700 dark:text-gray-400">
+                📊 Statistics for{" "}
+                <span className="font-semibold">{stats.period}</span>
+                {stats.transactionCount > 0 && (
+                    <span> • {stats.transactionCount} transactions</span>
+                )}
+              </p>
+            </div>
+        )}
+
+        {/* Secondary Content Grid - Transactions and Budget */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Recent Transactions (2 columns) */}
+          <div className="lg:col-span-2">
+            <RecentTransactions />
+          </div>
+
+          {/* Right Column - Budget Overview (1 column) */}
+          <div>
+            <BudgetOverview />
+          </div>
+        </div>
+
+        {/* Bottom Section - Savings Pots (Full Width) */}
+        <div className="grid grid-cols-1">
+          <SavingsPots />
         </div>
       </div>
-
-      {/* Bottom Section - Savings Pots (Full Width) */}
-      <div className="grid grid-cols-1">
-        <SavingsPots />
-      </div>
-    </div>
   );
 };
 
