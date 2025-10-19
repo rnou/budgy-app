@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, ChevronDown, Menu, LogOut, User, Settings } from "lucide-react";
+import { Bell, ChevronDown, Menu, LogOut, User } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 export const Navbar = ({ onMenuToggle }) => {
@@ -99,16 +99,6 @@ export const Navbar = ({ onMenuToggle }) => {
                         >
                           <User size={16} />
                           <span>Profile</span>
-                        </button>
-                        <button
-                            onClick={() => {
-                              setShowDropdown(false);
-                              navigate("/settings");
-                            }}
-                            className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <Settings size={16} />
-                          <span>Settings</span>
                         </button>
                       </div>
 

@@ -8,7 +8,6 @@ import {
   Calendar,
   ChevronRight,
   X,
-  User,
   Settings,
 } from "lucide-react";
 
@@ -50,12 +49,6 @@ export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
   ];
 
   const bottomMenuItems = [
-    {
-      icon: User,
-      label: "Profile",
-      path: "/profile",
-      active: location.pathname === "/profile",
-    },
     {
       icon: Settings,
       label: "Settings",
@@ -141,7 +134,7 @@ export const Sidebar = ({ isOpen = true, isMobile = false, onClose }) => {
               })}
             </nav>
 
-            {/* Bottom Navigation (Profile & Settings) */}
+            {/* Bottom Navigation (Settings ) */}
             <div className="mt-auto pt-6 border-t border-gray-800 dark:border-gray-900">
               <nav className="space-y-2">
                 {bottomMenuItems.map((item, index) => {
