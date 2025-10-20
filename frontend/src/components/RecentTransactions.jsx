@@ -23,10 +23,21 @@ export const RecentTransactions = () => {
     }
   };
 
-  const formatAmount = (amount) => {
-    const numAmount = Number(amount);
-    if (isNaN(numAmount)) return "$0.00";
-    return Math.abs(numAmount).toFixed(2);
+  const formatAmount = (amount, type) => {
+    const num = Number(amount);
+    const absValue = Math.abs(num).toFixed(2);
+
+    // INCOME and WITHDRAW increase balance (show with +)
+    if (type?.toUpperCase() === 'INCOME' || type?.toUpperCase() === 'WITHDRAW') {
+      return `+$${absValue}`;
+    }
+
+    // EXPENSE and SAVING decrease balance (show with -)
+    if (type?.toUpperCase() === 'EXPENSE' || type?.toUpperCase() === 'SAVING') {
+      return `-$${absValue}`;
+    }
+
+    return `$${absValue}`;
   };
 
   const renderTransaction = (transaction) => {
@@ -35,14 +46,21 @@ export const RecentTransactions = () => {
     const {
       id,
       icon = "ShoppingBag",
-      color = "bg-gray-500",
+      color = "#277C78",
       name = "Unknown",
       transactionDate,
       amount = 0,
+      type = "EXPENSE",
     } = transaction;
 
     const Icon = ICON_MAP[icon] || ShoppingBag;
-    const isPositive = Number(amount) > 0;
+
+    // Determine amount color based on type
+    const typeUpper = type?.toUpperCase();
+    let amountColorClass = 'text-gray-900 dark:text-white';
+    if (typeUpper === 'INCOME' || typeUpper === 'WITHDRAW') {
+      amountColorClass = 'text-green-600';
+    }
 
     return (
         <div
@@ -50,7 +68,8 @@ export const RecentTransactions = () => {
             className="flex items-center space-x-4 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
         >
           <div
-              className={`w-10 h-10 rounded-full ${color} flex items-center justify-center flex-shrink-0`}
+              className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: color }}
           >
             <Icon size={18} className="text-white" />
           </div>
@@ -59,10 +78,8 @@ export const RecentTransactions = () => {
             <p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(transactionDate)}</p>
           </div>
           <div className="text-right flex-shrink-0">
-            <p
-                className={`font-bold ${isPositive ? "text-green-600" : "text-gray-900 dark:text-white"}`}
-            >
-              {isPositive ? "+" : ""}${formatAmount(amount)}
+            <p className={`font-bold ${amountColorClass}`}>
+              {formatAmount(amount, type)}
             </p>
           </div>
         </div>

@@ -2,11 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { useFinance } from '../contexts/FinanceContext';
 import { Plus, Edit2, Trash2, DollarSign } from 'lucide-react';
 import { CATEGORIES, THEME_COLORS } from '../constants/constants';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const Budgets = () => {
     const context = useFinance();
 
-    // Safely extract values with defaults
     const budgets = context?.budgets || [];
     const transactions = context?.transactions || [];
     const loading = context?.loading || false;
@@ -17,13 +17,13 @@ const Budgets = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingBudget, setEditingBudget] = useState(null);
     const [selectedBudget, setSelectedBudget] = useState(null);
+    const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
     const [formData, setFormData] = useState({
         category: '',
         limitAmount: '',
         color: '#277C78'
     });
 
-    // Calculate budget stats
     const budgetStats = useMemo(() => {
         if (!Array.isArray(budgets)) {
             return [];
@@ -33,7 +33,6 @@ const Budgets = () => {
             .filter(budget => budget != null)
             .map(budget => {
                 try {
-                    // Use backend values directly
                     const spent = Number(budget.spent) || 0;
                     const limitAmount = Number(budget.limitAmount) || 0;
                     const transactionCount = Number(budget.transactionCount) || 0;
@@ -59,7 +58,6 @@ const Budgets = () => {
             .filter(stat => stat != null);
     }, [budgets]);
 
-    // Get transactions for selected budget
     const selectedBudgetTransactions = useMemo(() => {
         if (!selectedBudget || !Array.isArray(transactions)) {
             return [];
@@ -115,22 +113,25 @@ const Budgets = () => {
         }
     };
 
-    const handleDelete = async (budgetId) => {
+    const handleDeleteClick = (budgetId) => {
+        setDeleteConfirm({ show: true, id: budgetId });
+    };
+
+    const handleDeleteConfirm = async () => {
         if (!deleteBudget) {
             alert('Delete function not available.');
             return;
         }
 
-        if (window.confirm('Are you sure you want to delete this budget?')) {
-            try {
-                await deleteBudget(budgetId);
-                if (selectedBudget?.id === budgetId) {
-                    setSelectedBudget(null);
-                }
-            } catch (error) {
-                console.error('Error deleting budget:', error);
-                alert('Failed to delete budget: ' + error.message);
+        try {
+            await deleteBudget(deleteConfirm.id);
+            if (selectedBudget?.id === deleteConfirm.id) {
+                setSelectedBudget(null);
             }
+            setDeleteConfirm({ show: false, id: null });
+        } catch (error) {
+            console.error('Error deleting budget:', error);
+            alert('Failed to delete budget: ' + error.message);
         }
     };
 
@@ -206,7 +207,7 @@ const Budgets = () => {
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        handleDelete(budget.id);
+                                        handleDeleteClick(budget.id);
                                     }}
                                     className="p-1 text-gray-400 hover:text-red-600"
                                 >
@@ -423,7 +424,7 @@ const Budgets = () => {
                                                     {transaction.transactionDate ? new Date(transaction.transactionDate).toLocaleDateString() : 'No date'}
                                                 </p>
                                             </div>
-                                            <span className="font-semibold text-red-600">
+                                            <span className="font-semibold text-gray-900 dark:text-white">
                                                 -${formatCurrency(Math.abs(transaction.amount))}
                                             </span>
                                         </div>
@@ -438,6 +439,18 @@ const Budgets = () => {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={deleteConfirm.show}
+                title="Delete Budget"
+                message="Are you sure you want to delete this budget? This action cannot be undone."
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                onConfirm={handleDeleteConfirm}
+                onCancel={() => setDeleteConfirm({ show: false, id: null })}
+                variant="danger"
+            />
         </div>
     );
 };

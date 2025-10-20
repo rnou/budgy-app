@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useFinance } from '../contexts/FinanceContext';
 import { Plus, Edit2, Trash2, PiggyBank, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { THEME_COLORS } from '../constants/constants';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const SavingPots = () => {
     const {
@@ -17,17 +19,13 @@ const SavingPots = () => {
     const [editingPot, setEditingPot] = useState(null);
     const [selectedPot, setSelectedPot] = useState(null);
     const [actionType, setActionType] = useState(null); // 'saving' or 'withdraw'
+    const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null, name: '' });
     const [formData, setFormData] = useState({
         name: '',
         goal: '',
         color: '#277C78'
     });
     const [actionAmount, setActionAmount] = useState('');
-
-    const themeColors = [
-        '#277C78', '#82C9D7', '#F2CDAC', '#626070',
-        '#C94736', '#826CB0', '#597C7C', '#BE6C49'
-    ];
 
     // Calculate pot progress
     const potStats = useMemo(() => {
@@ -38,7 +36,7 @@ const SavingPots = () => {
 
             const saved = Number(pot.saved) || 0;
             const goal = Number(pot.goal) || 1;
-            const transactionCount = Number(pot.transactionCount) || 0; // ✨ FROM BACKEND
+            const transactionCount = Number(pot.transactionCount) || 0;
             const percentage = (saved / goal) * 100;
             const remaining = goal - saved;
 
@@ -110,17 +108,24 @@ const SavingPots = () => {
         }
     };
 
-    const handleDelete = async (potId) => {
-        if (window.confirm('Are you sure you want to delete this saving pot?')) {
-            try {
-                await deleteSavingPot(potId);
-                if (selectedPot?.id === potId) {
-                    setSelectedPot(null);
-                }
-            } catch (error) {
-                console.error('Error deleting pot:', error);
-                alert('Failed to delete pot');
+    const handleDeleteClick = (pot) => {
+        setDeleteConfirm({
+            show: true,
+            id: pot.id,
+            name: pot.name
+        });
+    };
+
+    const handleDeleteConfirm = async () => {
+        try {
+            await deleteSavingPot(deleteConfirm.id);
+            if (selectedPot?.id === deleteConfirm.id) {
+                setSelectedPot(null);
             }
+            setDeleteConfirm({ show: false, id: null, name: '' });
+        } catch (error) {
+            console.error('Error deleting pot:', error);
+            alert('Failed to delete pot');
         }
     };
 
@@ -150,11 +155,11 @@ const SavingPots = () => {
             await addTransaction({
                 name: `${actionType === 'saving' ? 'Deposit to' : 'Withdrawal from'} ${selectedPot.name}`,
                 amount: amount, // Always positive
-                category: 'Savings',
+                category: 'General',
                 transactionDate: new Date().toISOString().split('T')[0],
                 type: actionType,
                 icon: actionType === 'saving' ? 'ArrowUpCircle' : 'ArrowDownCircle',
-                color: 'bg-green-500',
+                color: selectedPot.color,
                 savingPotId: selectedPot.id
             });
 
@@ -235,7 +240,7 @@ const SavingPots = () => {
                                     <Edit2 className="w-4 h-4" />
                                 </button>
                                 <button
-                                    onClick={() => handleDelete(pot.id)}
+                                    onClick={() => handleDeleteClick(pot)}
                                     className="p-1 text-gray-400 hover:text-red-600"
                                 >
                                     <Trash2 className="w-4 h-4" />
@@ -372,15 +377,16 @@ const SavingPots = () => {
                                     Theme Color
                                 </label>
                                 <div className="flex gap-2 flex-wrap">
-                                    {themeColors.map((themeColor) => (
+                                    {THEME_COLORS.map((colorOption) => (
                                         <button
-                                            key={themeColor}
+                                            key={colorOption.value}
                                             type="button"
-                                            onClick={() => setFormData({ ...formData, color: themeColor })}
+                                            onClick={() => setFormData({ ...formData, color: colorOption.value })}
                                             className={`w-10 h-10 rounded-lg transition-transform ${
-                                                formData.color === themeColor ? 'ring-2 ring-gray-900 dark:ring-white scale-110' : ''
+                                                formData.color === colorOption.value ? 'ring-2 ring-gray-900 dark:ring-white scale-110' : ''
                                             }`}
-                                            style={{ backgroundColor: themeColor }}
+                                            style={{ backgroundColor: colorOption.value }}
+                                            title={colorOption.label}
                                         />
                                     ))}
                                 </div>
@@ -558,6 +564,18 @@ const SavingPots = () => {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={deleteConfirm.show}
+                title="Delete Saving Pot"
+                message={`Are you sure you want to delete "${deleteConfirm.name}"? All associated transactions will remain but won't be linked to any pot.`}
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                onConfirm={handleDeleteConfirm}
+                onCancel={() => setDeleteConfirm({ show: false, id: null, name: '' })}
+                variant="danger"
+            />
         </div>
     );
 };

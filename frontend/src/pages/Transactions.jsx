@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { Plus, Search, Filter, Edit2, Trash2, ShoppingBag, Link2, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
+import { Plus, Search, Filter, Edit2, Trash2, Link2, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { useFinance } from "../contexts/FinanceContext";
 import LoadingSpinner from "../components/LoadingSpinner";
+import ConfirmDialog from "../components/ConfirmDialog";
 import {
   ICON_MAP,
-  TRANSACTION_CATEGORIES,
-  COLOR_OPTIONS,
+  CATEGORIES,
+  THEME_COLORS,
   FILTER_TYPES,
   DATE_FORMAT_OPTIONS,
 } from "../constants/constants";
@@ -13,10 +14,10 @@ import {
 const INITIAL_FORM_STATE = {
   name: "",
   amount: "",
-  category: "other",
+  category: "General",
   type: "expense",
   icon: "ShoppingBag",
-  color: "bg-blue-500",
+  color: "#277C78",
   budgetId: null,
   savingPotId: null,
 };
@@ -45,6 +46,7 @@ export const Transactions = () => {
   });
 
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
 
   const filteredTransactions = useMemo(() => {
     if (!Array.isArray(transactions)) return [];
@@ -130,10 +132,10 @@ export const Transactions = () => {
     setFormData({
       name: transaction.name || "",
       amount: Math.abs(Number(transaction.amount) || 0).toString(),
-      category: transaction.category || "other",
+      category: transaction.category || "General",
       type: transaction.type?.toLowerCase() || "expense",
       icon: transaction.icon || "ShoppingBag",
-      color: transaction.color || "bg-blue-500",
+      color: transaction.color || "#277C78",
       budgetId: transaction.budgetId || null,
       savingPotId: transaction.savingPotId || null,
     });
@@ -152,15 +154,11 @@ export const Transactions = () => {
     e.preventDefault();
 
     try {
-      // AMOUNT HANDLING: Different for each type
       let amount = parseFloat(formData.amount);
 
-      // EXPENSE: Store as negative
       if (formData.type === "expense") {
         amount = -Math.abs(amount);
-      }
-      // INCOME/SAVING/WITHDRAW: Store as positive
-      else {
+      } else {
         amount = Math.abs(amount);
       }
 
@@ -188,23 +186,19 @@ export const Transactions = () => {
     }
   };
 
-  const handleDelete = useCallback(
-      async (id) => {
-        if (
-            !window.confirm("Are you sure you want to delete this transaction?")
-        ) {
-          return;
-        }
+  const handleDeleteClick = useCallback((id) => {
+    setDeleteConfirm({ show: true, id });
+  }, []);
 
-        try {
-          await deleteTransaction(id);
-        } catch (error) {
-          console.error("Error deleting transaction:", error);
-          alert(error.message || "Failed to delete transaction");
-        }
-      },
-      [deleteTransaction],
-  );
+  const handleDeleteConfirm = useCallback(async () => {
+    try {
+      await deleteTransaction(deleteConfirm.id);
+      setDeleteConfirm({ show: false, id: null });
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+      alert(error.message || "Failed to delete transaction");
+    }
+  }, [deleteConfirm.id, deleteTransaction]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "No date";
@@ -218,12 +212,23 @@ export const Transactions = () => {
     }
   };
 
-  const formatAmount = (amount) => {
+  const formatAmount = (amount, type) => {
     const num = Number(amount);
-    return isNaN(num) ? "0.00" : Math.abs(num).toFixed(2);
+    const absValue = Math.abs(num).toFixed(2);
+
+    // INCOME and WITHDRAW increase balance (green, positive)
+    if (type?.toUpperCase() === 'INCOME' || type?.toUpperCase() === 'WITHDRAW') {
+      return `+${absValue}`;
+    }
+
+    // EXPENSE and SAVING decrease balance (black, negative)
+    if (type?.toUpperCase() === 'EXPENSE' || type?.toUpperCase() === 'SAVING') {
+      return `-${absValue}`;
+    }
+
+    return `${absValue}`;
   };
 
-  // Helper to get icon for transaction type
   const getTypeIcon = (type) => {
     const typeUpper = type?.toUpperCase();
     if (typeUpper === 'SAVING') return ArrowUpCircle;
@@ -236,22 +241,28 @@ export const Transactions = () => {
         if (!transaction) return null;
 
         const { id, icon, color, name, category, transactionDate, amount, type, budgetId, savingPotId } = transaction;
-        const Icon = ICON_MAP[icon] || ShoppingBag;
-        const isPositive = Number(amount) > 0;
+        const Icon = ICON_MAP[icon] || ICON_MAP.ShoppingBag;
         const TypeIcon = getTypeIcon(type);
 
-        // Find linked budget or pot
         const linkedBudget = budgetId && budgets?.find(b => b.id === budgetId);
         const linkedPot = savingPotId && savingsPots?.find(p => p.id === savingPotId);
+
+        // Determine text color
+        const typeUpper = type?.toUpperCase();
+        let amountColorClass = 'text-gray-900 dark:text-white';
+        if (typeUpper === 'WITHDRAW' || typeUpper === 'INCOME') {
+          amountColorClass = 'text-green-600';
+        } else if (typeUpper === 'SAVING' || typeUpper === 'EXPENSE') {
+          amountColorClass = 'text-gray-900 dark:text-white';
+        }
 
         return (
             <div key={id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4 flex-1 min-w-0">
                   <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          type?.toUpperCase() === 'WITHDRAW' ? 'bg-red-500' : (color || "bg-gray-500")
-                      }`}
+                      className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: color }}
                   >
                     {TypeIcon ? <TypeIcon size={20} className="text-white" /> : <Icon size={20} className="text-white" />}
                   </div>
@@ -280,17 +291,9 @@ export const Transactions = () => {
                 </div>
 
                 <div className="flex items-center space-x-4 flex-shrink-0">
-                  <span
-                      className={`text-lg font-bold ${
-                          type?.toUpperCase() === 'SAVING' ? 'text-green-600' :
-                              type?.toUpperCase() === 'WITHDRAW' ? 'text-red-600' :
-                                  isPositive ? 'text-green-600' : 'text-gray-900 dark:text-white'
-                      }`}
-                  >
-                    {type?.toUpperCase() === 'SAVING' || type?.toUpperCase() === 'INCOME' ? '+' : ''}
-                    {type?.toUpperCase() === 'WITHDRAW' ? '-' : ''}
-                    ${formatAmount(amount)}
-                  </span>
+              <span className={`text-lg font-bold ${amountColorClass}`}>
+                {formatAmount(amount, type)}
+              </span>
 
                   <div className="flex items-center space-x-2">
                     <button
@@ -301,7 +304,7 @@ export const Transactions = () => {
                       <Edit2 size={16} />
                     </button>
                     <button
-                        onClick={() => handleDelete(id)}
+                        onClick={() => handleDeleteClick(id)}
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                         aria-label="Delete transaction"
                     >
@@ -313,7 +316,7 @@ export const Transactions = () => {
             </div>
         );
       },
-      [openEditModal, handleDelete, budgets, savingsPots],
+      [openEditModal, handleDeleteClick, budgets, savingsPots],
   );
 
   if (loading) {
@@ -422,13 +425,26 @@ export const Transactions = () => {
                 onFormChange={handleFormChange}
                 onSubmit={handleSubmit}
                 onClose={closeModal}
+                setFormData={setFormData}
             />
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+            isOpen={deleteConfirm.show}
+            title="Delete Transaction"
+            message="Are you sure you want to delete this transaction? This action cannot be undone."
+            confirmLabel="Delete"
+            cancelLabel="Cancel"
+            onConfirm={handleDeleteConfirm}
+            onCancel={() => setDeleteConfirm({ show: false, id: null })}
+            variant="danger"
+        />
       </div>
   );
 };
 
-// Modal Component
+// Modal Component with Icon & Color Pickers
 const TransactionModal = ({
                             isOpen,
                             isEditing,
@@ -438,6 +454,7 @@ const TransactionModal = ({
                             onFormChange,
                             onSubmit,
                             onClose,
+                            setFormData,
                           }) => {
   if (!isOpen) return null;
 
@@ -446,8 +463,9 @@ const TransactionModal = ({
   const showSavingPotSelector = formData.type === 'saving' || formData.type === 'withdraw';
   const showCategoryAndIcon = formData.type === 'income' || formData.type === 'expense';
 
-  // Filter budgets for expenses only
   const availableBudgets = budgets?.filter(b => b.category) || [];
+
+  const selectedCategory = CATEGORIES.find(cat => cat.value === formData.category) || CATEGORIES[0];
 
   return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -511,58 +529,62 @@ const TransactionModal = ({
 
               {showCategoryAndIcon && (
                   <>
+                    {/* Category with Icon Picker */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Category
+                        Category & Icon
                       </label>
-                      <select
-                          name="category"
-                          value={formData.category}
-                          onChange={onFormChange}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        {TRANSACTION_CATEGORIES.map((cat) => (
-                            <option key={cat.value} value={cat.value}>
-                              {cat.label}
-                            </option>
-                        ))}
-                      </select>
+                      <div className="grid grid-cols-3 gap-2">
+                        {CATEGORIES.map((cat) => {
+                          const Icon = ICON_MAP[cat.icon];
+                          const isSelected = formData.category === cat.value;
+
+                          return (
+                              <button
+                                  key={cat.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      category: cat.value,
+                                      icon: cat.icon
+                                    }));
+                                  }}
+                                  className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                                      isSelected
+                                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                          : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                                  }`}
+                              >
+                                <Icon size={24} className={isSelected ? 'text-blue-600' : 'text-gray-600 dark:text-gray-400'} />
+                                <span className={`text-xs ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
+                            {cat.label}
+                          </span>
+                              </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
+                    {/* Color Picker */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Icon
+                        Theme Color
                       </label>
-                      <select
-                          name="icon"
-                          value={formData.icon}
-                          onChange={onFormChange}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        {TRANSACTION_CATEGORIES.map((cat) => (
-                            <option key={cat.icon} value={cat.icon}>
-                              {cat.label}
-                            </option>
+                      <div className="flex gap-2 flex-wrap">
+                        {THEME_COLORS.map((colorOption) => (
+                            <button
+                                key={colorOption.value}
+                                type="button"
+                                onClick={() => setFormData(prev => ({ ...prev, color: colorOption.value }))}
+                                className={`w-10 h-10 rounded-lg transition-transform ${
+                                    formData.color === colorOption.value ? 'ring-2 ring-gray-900 dark:ring-white scale-110' : ''
+                                }`}
+                                style={{ backgroundColor: colorOption.value }}
+                                title={colorOption.label}
+                            />
                         ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Color
-                      </label>
-                      <select
-                          name="color"
-                          value={formData.color}
-                          onChange={onFormChange}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        {COLOR_OPTIONS.map((color) => (
-                            <option key={color.value} value={color.value}>
-                              {color.label}
-                            </option>
-                        ))}
-                      </select>
+                      </div>
                     </div>
                   </>
               )}
@@ -575,18 +597,17 @@ const TransactionModal = ({
                 </label>
 
                 <div className="space-y-3">
-                  {/* Link to Budget */}
                   {showBudgetSelector && (
                       <div>
                         <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          Link to Budget {formData.type === 'expense' ? '(Required)' : ''}
+                          Link to Budget (Required)
                         </label>
                         <select
                             name="budgetId"
                             value={formData.budgetId || ''}
                             onChange={onFormChange}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            required={formData.type === 'expense'}
+                            required
                         >
                           <option value="">No budget</option>
                           {availableBudgets.map((budget) => (
@@ -607,14 +628,14 @@ const TransactionModal = ({
                   {showSavingPotSelector && (
                       <div>
                         <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          Link to Saving Pot {formData.type === 'saving' || formData.type === 'withdraw' ? '(Required)' : ''}
+                          Link to Saving Pot (Required)
                         </label>
                         <select
                             name="savingPotId"
                             value={formData.savingPotId || ''}
                             onChange={onFormChange}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            required={formData.type === 'saving' || formData.type === 'withdraw'}
+                            required
                         >
                           <option value="">Select saving pot</option>
                           {savingsPots?.map((pot) => (

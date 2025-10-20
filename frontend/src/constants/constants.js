@@ -48,9 +48,8 @@ export const CATEGORIES = [
   { value: "Transportation", label: "Transportation", icon: "Car" },
   { value: "Personal Care", label: "Personal Care", icon: "Heart" },
   { value: "Education", label: "Education", icon: "GraduationCap" },
-  { value: "Lifestyle", label: "Lifestyle", icon: "Smile" },
   { value: "Shopping", label: "Shopping", icon: "ShoppingBag" },
-  { value: "General", label: "General", icon: "PiggyBank" },
+  { value: "Other", label: "General", icon: "PiggyBank" },
 ];
 
 export const getCategoryByValue = (value) => {
@@ -61,19 +60,6 @@ export const getCategoryIcon = (categoryValue) => {
   const category = getCategoryByValue(categoryValue);
   return ICON_MAP[category.icon];
 };
-
-// ==================== LEGACY ====================
-export const TRANSACTION_CATEGORIES = [
-  { value: "restaurant", label: "Restaurant", icon: "Utensils" },
-  { value: "groceries", label: "Groceries", icon: "ShoppingCart" },
-  { value: "transport", label: "Transport", icon: "Car" },
-  { value: "entertainment", label: "Entertainment", icon: "Tv" },
-  { value: "coffee", label: "Coffee", icon: "Coffee" },
-  { value: "shopping", label: "Shopping", icon: "ShoppingBag" },
-  { value: "fuel", label: "Gas", icon: "Fuel" },
-  { value: "income", label: "Income", icon: "ShoppingBag" },
-  { value: "other", label: "Other", icon: "ShoppingBag" },
-];
 
 // ==================== COLOR OPTIONS ====================
 export const THEME_COLORS = [
@@ -86,25 +72,6 @@ export const THEME_COLORS = [
   { value: "#597C7C", label: "Dark Teal", class: "bg-[#597C7C]" },
   { value: "#BE6C49", label: "Orange", class: "bg-[#BE6C49]" },
 ];
-
-export const COLOR_OPTIONS = [
-  { value: "bg-blue-500", label: "Blue" },
-  { value: "bg-green-500", label: "Green" },
-  { value: "bg-orange-500", label: "Orange" },
-  { value: "bg-purple-500", label: "Purple" },
-  { value: "bg-red-500", label: "Red" },
-  { value: "bg-amber-500", label: "Amber" },
-  { value: "bg-teal-500", label: "Teal" },
-  { value: "bg-pink-500", label: "Pink" },
-];
-
-// ==================== TRANSACTION TYPES ====================
-export const TRANSACTION_TYPES = {
-  INCOME: "income",
-  EXPENSE: "expense",
-  SAVING: "saving",
-  WITHDRAW: "withdraw",
-};
 
 // ==================== FILTER TYPES ====================
 export const FILTER_TYPES = {
