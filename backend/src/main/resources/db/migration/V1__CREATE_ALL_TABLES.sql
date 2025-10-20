@@ -1,74 +1,74 @@
 CREATE TABLE budgets
 (
     id                BIGINT AUTO_INCREMENT NOT NULL,
-    category          VARCHAR(255)          NOT NULL,
-    spent             DECIMAL(10, 2)        NOT NULL,
-    limit_amount      DECIMAL(10, 2)        NOT NULL,
-    transaction_count INT                   NOT NULL,
-    color             VARCHAR(255)          NULL,
-    user_id           BIGINT                NOT NULL,
-    created_at        datetime              NULL,
-    updated_at        datetime              NULL,
+    category          VARCHAR(255)   NOT NULL,
+    spent             DECIMAL(10, 2) NOT NULL,
+    limit_amount      DECIMAL(10, 2) NOT NULL,
+    transaction_count INT            NOT NULL,
+    color             VARCHAR(255) NULL,
+    user_id           BIGINT         NOT NULL,
+    created_at        datetime NULL,
+    updated_at        datetime NULL,
     CONSTRAINT pk_budgets PRIMARY KEY (id)
 );
 
 CREATE TABLE recurring_bills
 (
     id         BIGINT AUTO_INCREMENT NOT NULL,
-    name       VARCHAR(255)          NOT NULL,
-    amount     DECIMAL(10, 2)        NOT NULL,
-    due_date   date                  NOT NULL,
-    status     VARCHAR(20)           NOT NULL,
-    category   VARCHAR(255)          NOT NULL,
-    user_id    BIGINT                NOT NULL,
-    created_at datetime              NULL,
-    updated_at datetime              NULL,
+    name       VARCHAR(255)   NOT NULL,
+    amount     DECIMAL(10, 2) NOT NULL,
+    due_date   date           NOT NULL,
+    status     VARCHAR(20)    NOT NULL,
+    category   VARCHAR(255)   NOT NULL,
+    user_id    BIGINT         NOT NULL,
+    created_at datetime NULL,
+    updated_at datetime NULL,
     CONSTRAINT pk_recurring_bills PRIMARY KEY (id)
 );
 
 CREATE TABLE saving_pots
 (
     id                BIGINT AUTO_INCREMENT NOT NULL,
-    name              VARCHAR(255)          NOT NULL,
-    saved             DECIMAL(10, 2)        NOT NULL,
-    goal              DECIMAL(10, 2)        NOT NULL,
-    transaction_count INT                   NOT NULL,
-    icon              VARCHAR(255)          NULL,
-    color             VARCHAR(255)          NULL,
-    user_id           BIGINT                NOT NULL,
-    created_at        datetime              NULL,
-    updated_at        datetime              NULL,
+    name              VARCHAR(255)   NOT NULL,
+    saved             DECIMAL(10, 2) NOT NULL,
+    goal              DECIMAL(10, 2) NOT NULL,
+    transaction_count INT            NOT NULL,
+    icon              VARCHAR(255) NULL,
+    color             VARCHAR(255) NULL,
+    user_id           BIGINT         NOT NULL,
+    created_at        datetime NULL,
+    updated_at        datetime NULL,
     CONSTRAINT pk_saving_pots PRIMARY KEY (id)
 );
 
 CREATE TABLE transactions
 (
     id               BIGINT AUTO_INCREMENT NOT NULL,
-    name             VARCHAR(255)          NOT NULL,
-    transaction_date date                  NOT NULL,
-    amount           DECIMAL(10, 2)        NOT NULL,
-    category         VARCHAR(255)          NOT NULL,
-    type             VARCHAR(20)           NOT NULL,
-    icon             VARCHAR(255)          NULL,
-    color            VARCHAR(255)          NULL,
-    user_id          BIGINT                NOT NULL,
-    budget_id        BIGINT                NULL,
-    saving_pot_id    BIGINT                NULL,
-    created_at       datetime              NULL,
-    updated_at       datetime              NULL,
+    name             VARCHAR(255)   NOT NULL,
+    transaction_date date           NOT NULL,
+    amount           DECIMAL(10, 2) NOT NULL,
+    category         VARCHAR(255)   NOT NULL,
+    type             VARCHAR(20)    NOT NULL,
+    icon             VARCHAR(255) NULL,
+    color            VARCHAR(255) NULL,
+    user_id          BIGINT         NOT NULL,
+    budget_id        BIGINT NULL,
+    saving_pot_id    BIGINT NULL,
+    created_at       datetime NULL,
+    updated_at       datetime NULL,
     CONSTRAINT pk_transactions PRIMARY KEY (id)
 );
 
 CREATE TABLE users
 (
     id              BIGINT AUTO_INCREMENT NOT NULL,
-    name            VARCHAR(255)          NOT NULL,
-    email           VARCHAR(255)          NOT NULL,
-    password        VARCHAR(255)          NOT NULL,
-    initials        VARCHAR(10)           NULL,
-    current_balance DECIMAL(10, 2)        NULL,
-    created_at      datetime              NULL,
-    updated_at      datetime              NULL,
+    name            VARCHAR(255) NOT NULL,
+    email           VARCHAR(255) NOT NULL,
+    password        VARCHAR(255) NOT NULL,
+    initials        VARCHAR(10) NULL,
+    current_balance DECIMAL(10, 2) NULL,
+    created_at      datetime NULL,
+    updated_at      datetime NULL,
     CONSTRAINT pk_users PRIMARY KEY (id)
 );
 

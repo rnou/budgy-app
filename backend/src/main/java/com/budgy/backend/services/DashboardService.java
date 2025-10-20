@@ -1,11 +1,9 @@
 package com.budgy.backend.services;
 
 import com.budgy.backend.dto.response.DashboardStatsDTO;
-import com.budgy.backend.entities.SavingPot;
 import com.budgy.backend.entities.User;
 import com.budgy.backend.enums.TransactionType;
 import com.budgy.backend.exceptions.ResourceNotFoundException;
-import com.budgy.backend.repositories.SavingPotRepository;
 import com.budgy.backend.repositories.TransactionRepository;
 import com.budgy.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +15,6 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 /**
  * Dashboard Service
@@ -32,7 +29,6 @@ public class DashboardService {
 
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
-    private final SavingPotRepository savingPotRepository;
 
     /**
      * Get complete dashboard statistics for a user
@@ -57,22 +53,37 @@ public class DashboardService {
         LocalDate startOfPreviousMonth = previousMonth.atDay(1);
         LocalDate endOfPreviousMonth = previousMonth.atEndOfMonth();
 
-        // Calculate current month statistics using optimized queries
+        // ==================== CURRENT MONTH STATISTICS ====================
+
+        // Income: Sum of INCOME transactions this month
         BigDecimal currentIncome = transactionRepository.sumByUserAndTypeAndDateRange(
                 userId, TransactionType.INCOME, startOfMonth, endOfMonth
         );
 
+        // Expenses: Sum of EXPENSE transactions this month (already negative)
         BigDecimal currentExpenses = transactionRepository.sumByUserAndTypeAndDateRange(
                 userId, TransactionType.EXPENSE, startOfMonth, endOfMonth
         );
 
-        BigDecimal currentSavings = calculateTotalSavings(userId);
+        // Savings: NET amount saved this month (SAVING - WITHDRAW)
+        BigDecimal savingTransactions = transactionRepository.sumByUserAndTypeAndDateRange(
+                userId, TransactionType.SAVING, startOfMonth, endOfMonth
+        );
 
+        BigDecimal withdrawTransactions = transactionRepository.sumByUserAndTypeAndDateRange(
+                userId, TransactionType.WITHDRAW, startOfMonth, endOfMonth
+        );
+
+        // Net savings = money saved - money withdrawn
+        BigDecimal currentSavings = savingTransactions.subtract(withdrawTransactions);
+
+        // Transaction count
         int transactionCount = transactionRepository.countByUserIdAndTransactionDateBetween(
                 userId, startOfMonth, endOfMonth
         );
 
-        // Calculate previous month statistics for comparison
+        // ==================== PREVIOUS MONTH STATISTICS ====================
+
         BigDecimal previousIncome = transactionRepository.sumByUserAndTypeAndDateRange(
                 userId, TransactionType.INCOME, startOfPreviousMonth, endOfPreviousMonth
         );
@@ -81,26 +92,38 @@ public class DashboardService {
                 userId, TransactionType.EXPENSE, startOfPreviousMonth, endOfPreviousMonth
         );
 
-        BigDecimal previousSavings = calculatePreviousMonthSavings(
-                userId, currentSavings, startOfMonth, endOfMonth
+        BigDecimal previousSavings = transactionRepository.sumByUserAndTypeAndDateRange(
+                userId, TransactionType.SAVING, startOfPreviousMonth, endOfPreviousMonth
         );
 
-        // Calculate changes
+        BigDecimal previousWithdrawals = transactionRepository.sumByUserAndTypeAndDateRange(
+                userId, TransactionType.WITHDRAW, startOfPreviousMonth, endOfPreviousMonth
+        );
+
+        // ==================== CALCULATE CHANGES ====================
+
         BigDecimal incomeChange = currentIncome.subtract(previousIncome);
         BigDecimal expenseChange = currentExpenses.subtract(previousExpenses);
         BigDecimal savingsChange = currentSavings.subtract(previousSavings);
 
-        // Calculate percentage changes
+        // ==================== CALCULATE PERCENTAGE CHANGES ====================
+
         Double incomeChangePercent = calculatePercentageChange(previousIncome, currentIncome);
         Double expenseChangePercent = calculatePercentageChange(previousExpenses, currentExpenses);
         Double savingsChangePercent = calculatePercentageChange(previousSavings, currentSavings);
 
-        // Current balance from user entity
+        // ==================== BALANCE CALCULATION ====================
+
+        // Current balance from user entity (already updated by TransactionService)
         BigDecimal currentBalance = user.getCurrentBalance();
 
-        // Calculate previous month's balance
-        // Previous balance = Current balance - (current month income - current month expenses)
-        BigDecimal currentMonthNetChange = currentIncome.add(currentExpenses); // expenses are negative
+        // Calculate what the balance was at the start of this month
+        // Starting Balance = Current Balance - (Income - Expenses - Savings + Withdrawals)
+        // Note: Expenses are already negative, so we ADD them
+        BigDecimal currentMonthNetChange = currentIncome
+                .add(currentExpenses)          // Expenses are negative, so this subtracts
+                .subtract(currentSavings);      // Savings decrease balance
+
         BigDecimal previousBalance = currentBalance.subtract(currentMonthNetChange);
 
         // Calculate balance change
@@ -109,6 +132,8 @@ public class DashboardService {
 
         // Format period for display
         String period = currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy"));
+
+        // ==================== BUILD RESPONSE ====================
 
         return DashboardStatsDTO.builder()
                 .currentBalance(currentBalance)
@@ -126,44 +151,6 @@ public class DashboardService {
                 .period(period)
                 .transactionCount(transactionCount)
                 .build();
-    }
-
-    /**
-     * Calculate total savings across all saving pots
-     *
-     * @param userId The user ID
-     * @return Total saved amount across all pots
-     */
-    private BigDecimal calculateTotalSavings(Long userId) {
-        List<SavingPot> savingPots = savingPotRepository.findByUserId(userId);
-
-        return savingPots.stream()
-                .map(SavingPot::getSaved)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    /**
-     * Calculate total savings at the end of previous month
-     * Subtracts current month's saving additions from current total
-     *
-     * @param userId              The user ID
-     * @param currentSavings      Current total savings
-     * @param startOfCurrentMonth Start date of current month
-     * @param endOfCurrentMonth   End date of current month
-     * @return Savings total at end of previous month
-     */
-    private BigDecimal calculatePreviousMonthSavings(
-            Long userId,
-            BigDecimal currentSavings,
-            LocalDate startOfCurrentMonth,
-            LocalDate endOfCurrentMonth) {
-
-        // Get saving additions in current month using optimized query
-        BigDecimal currentMonthSavingAdditions = transactionRepository
-                .sumSavingPotTransactionsByDateRange(userId, startOfCurrentMonth, endOfCurrentMonth);
-
-        // Previous month savings = current savings - additions this month
-        return currentSavings.subtract(currentMonthSavingAdditions);
     }
 
     /**
